@@ -190,8 +190,7 @@ class Ready
     chart_data = run_names.map do |run_name|
       ["Old", "New"].zip([old_suite, new_suite]).map do |experiment_name, suite|
         run = suite.run_named(run_name)
-        ["Normal", "Without GC"].zip([run.normal, run.without_gc]).map do
-          |run_type, series|
+        ["Normal", "Without GC"].zip([run.normal, run.without_gc]).map do |run_type, series|
           DataPoint.new(experiment_name,
                         run_name,
                         run_type,
