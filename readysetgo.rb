@@ -311,20 +311,3 @@ class Ready
     end
   end
 end
-
-def ten_years_of_price_points
-  generate_price_points(Day.new(2000, 1, 3), Day.new(2010, 1, 1))
-end
-
-def one_year_of_price_points
-  generate_price_points(Day.new(2000, 1, 3), Day.new(2001, 1, 1))
-end
-
-def generate_price_points(first_day, last_day)
-  Hash[
-    Day::Range.new(first_day, last_day).map do |day|
-      [day, Assets::Fund::PricePoint.new(1.0)]
-    end
-  ]
-end
-
