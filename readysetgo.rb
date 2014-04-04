@@ -1,5 +1,6 @@
 require "pp"
 require "json"
+require "forwardable"
 
 def ready(name, &block)
   name = name.to_s
@@ -181,8 +182,6 @@ class Ready
   end
 
   class Comparison < Struct.new(:name, :before, :after)
-    SCREEN_WIDTH = 80
-
     def self.from_suites(old_suite, new_suite)
       names = new_suite.run_names
       names.map do |name|
@@ -193,6 +192,21 @@ class Ready
     end
 
     def to_plot
+      PlotRenderer.new(self).render
+    end
+  end
+
+  class PlotRenderer
+    SCREEN_WIDTH = 80
+
+    extend Forwardable
+    def_delegators :@comparison, :before, :after
+
+    def initialize(comparison)
+      @comparison = comparison
+    end
+
+    def render
       titles = [
         "Before (GC):    ",
         "Before (No GC): ",
