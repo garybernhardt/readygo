@@ -209,33 +209,45 @@ class Ready
     end
 
     def render
-      titles = [
+      titles.zip(bars).map { |title, bar| title + bar }
+    end
+
+    def titles
+      [
         "Before (GC):    ",
         "Before (No GC): ",
         "After (GC):     ",
         "After (No GC):  ",
         "                ", # legend
       ]
-      bar_length = screen_width - titles.first.length
-      max_value = [before.normal.max,
-                   before.without_gc.max,
-                   after.normal.max,
-                   after.without_gc.max].max
-      bars = [
+    end
+
+    def bars
+      [
         BarRenderer.new(before.normal, max_value, bar_length).render,
         BarRenderer.new(before.without_gc, max_value, bar_length).render,
         BarRenderer.new(after.normal, max_value, bar_length).render,
         BarRenderer.new(after.without_gc, max_value, bar_length).render,
-        legend(max_value, bar_length),
+        legend,
       ]
-      titles.zip(bars).map do |title, bar|
-        title + bar
-      end
     end
 
-    def legend(max_value, bar_length)
+    def legend
       formatted_max = "%.3g" % max_value
       "0" + formatted_max.rjust(bar_length - 1)
+    end
+
+    def max_value
+      [
+        before.normal.max,
+        before.without_gc.max,
+        after.normal.max,
+        after.without_gc.max
+      ].max
+    end
+
+    def bar_length
+      screen_width - titles.first.length
     end
   end
 
