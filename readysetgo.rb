@@ -1,50 +1,6 @@
 require "pp"
 require "json"
 
-HTML_TEMPLATE = <<-htmlend
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <title>
-      readysetgo
-    </title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-    <script src="http://code.highcharts.com/highcharts.js"></script>
-    <script src="http://code.highcharts.com/highcharts-more.js"></script>
-    <script type="text/javascript">
-      $(function() {
-        var i;
-
-        var all_data = %s;
-
-        for (i=0; i<all_data.length; i++) {
-          var series_data = all_data[i].series_data;
-          var title = all_data[i].title;
-          console.log(series_data);
-          div = $('<div class="chart_div"></div>').appendTo("body").get()[0];
-          $(div).highcharts({
-            chart: { type: 'boxplot' },
-            title: { text: title },
-            yAxis: { min: 0 },
-            series: series_data,
-          });
-        }
-      });
-    </script>
-    <style>
-      .chart_div {
-        width: 700px;
-        height: 300px;
-      }
-      .chart_div {
-        margin: 20px;
-      }
-    </style>
-  </head>
-  <body></body>
-</html>
-htmlend
-
 def ready(name, &block)
   name = name.to_s
   record = ARGV.include?("--record")
@@ -125,6 +81,10 @@ class Ready
       @runs << run
     end
 
+    def run_names
+      @runs.map(&:name)
+    end
+
     def run_named(name)
       run = @runs.find { |run| run.name == name }
       run or raise "Couldn't find run: #{name.inspect}"
@@ -183,59 +143,13 @@ class Ready
   end
 
   def self.show_comparison
-    new_suite = self.suite
     old_suite = Suite.load
-    run_names = new_suite.runs.map(&:name)
-
-    chart_data = run_names.map do |run_name|
-      ["Old", "New"].zip([old_suite, new_suite]).map do |experiment_name, suite|
-        run = suite.run_named(run_name)
-        ["Normal", "Without GC"].zip([run.normal, run.without_gc]).map do |run_type, series|
-          DataPoint.new(experiment_name,
-                        run_name,
-                        run_type,
-                        series.min,
-                        series.percentile(25),
-                        series.median,
-                        series.percentile(75),
-                        series.max)
-        end
-      end
-    end.flatten
-
-    table = Table.new(chart_data)
-
-    chart_data = table.row_values(:run_name).map do |run_name|
-      result_for_run(table, run_name)
+    new_suite = self.suite
+    comparisons = Comparison.from_suites(old_suite, new_suite)
+    comparisons.each do |comparison|
+      puts comparison.name
+      puts comparison.to_plot.map { |s| "  " + s }.join("\n")
     end
-
-    File.write("temp.html", HTML_TEMPLATE % chart_data.to_json)
-    `open temp.html`
-  end
-
-  def self.result_for_run(table, run_name)
-    run_types = ["Normal", "Without GC"]
-
-    run_data = run_types.map do |run_type|
-      run_type_data = table.row_values(:experiment_name).map do |experiment_name|
-        row = table.find(:run_name => run_name,
-                         :experiment_name => experiment_name,
-                         :run_type => run_type)
-        [row.min,
-         row.percentile_25,
-         row.median,
-         row.percenile_75,
-         row.max]
-      end
-      {
-        :name => run_type,
-        :data => run_type_data,
-      }
-    end
-    {
-      :title => run_name,
-      :series_data => run_data,
-    }
   end
 
   def run(go_block, allow_gc=true)
@@ -264,6 +178,83 @@ class Ready
     end
 
     times
+  end
+
+  class Comparison < Struct.new(:name, :before, :after)
+    SCREEN_WIDTH = 80
+
+    def self.from_suites(old_suite, new_suite)
+      names = new_suite.run_names
+      names.map do |name|
+        Comparison.new(name,
+                       old_suite.run_named(name),
+                       new_suite.run_named(name))
+      end
+    end
+
+    def to_plot
+      titles = [
+        "Before (GC):    ",
+        "Before (No GC): ",
+        "After (GC):     ",
+        "After (No GC):  ",
+        "                ", # legend
+      ]
+      bar_length = SCREEN_WIDTH - titles.first.length
+      max_value = [before.normal.max,
+                   before.without_gc.max,
+                   after.normal.max,
+                   after.without_gc.max].max
+      bars = [
+        build_bar(before.normal, max_value, bar_length),
+        build_bar(before.without_gc, max_value, bar_length),
+        build_bar(after.normal, max_value, bar_length),
+        build_bar(after.without_gc, max_value, bar_length),
+        legend(max_value, bar_length),
+      ]
+      titles.zip(bars).map do |title, bar|
+        title + bar
+      end
+    end
+
+    def build_bar(series, max_value, bar_length)
+      # Make room for pipes on either side
+      bar_length = bar_length - 2
+
+      min = scale_value(series.min, max_value, bar_length)
+      median = scale_value(series.median, max_value, bar_length)
+      max = scale_value(series.max, max_value, bar_length)
+
+      min_width = min
+      median_width = median - min
+      max_width = max - median
+
+      # Make room for median marker
+      if median_width == 0
+        min_width -= 1
+      else
+        median_width -= 1
+      end
+
+      (
+        "|" +
+        (" " * min_width) +
+        ("-" * median_width) +
+        "*" +
+        ("-" * max_width) +
+        (" " * (bar_length - max)) +
+        "|"
+      )
+    end
+
+    def scale_value(value, max_value, bar_length)
+      (value.to_f / max_value.to_f * bar_length.to_f).round
+    end
+
+    def legend(max_value, bar_length)
+      formatted_max = "%.3g" % max_value
+      "0" + formatted_max.rjust(bar_length - 1)
+    end
   end
 
   class RunResult
