@@ -222,10 +222,10 @@ class Ready
 
     def bars
       [
-        BarRenderer.new(before.normal, max_value, bar_length).render,
-        BarRenderer.new(before.without_gc, max_value, bar_length).render,
-        BarRenderer.new(after.normal, max_value, bar_length).render,
-        BarRenderer.new(after.without_gc, max_value, bar_length).render,
+        BarRenderer.new(before.normal.stats, max_value, bar_length).render,
+        BarRenderer.new(before.without_gc.stats, max_value, bar_length).render,
+        BarRenderer.new(after.normal.stats, max_value, bar_length).render,
+        BarRenderer.new(after.without_gc.stats, max_value, bar_length).render,
         legend,
       ]
     end
@@ -250,17 +250,17 @@ class Ready
   end
 
   class BarRenderer
-    def initialize(series, max_value, bar_length)
-      @series = series
+    def initialize(series_statistics, max_value, bar_length)
+      @statistics = series_statistics
       @max_value = max_value
       # Make room for pipes that we'll add to either side of the bar
       @bar_length = bar_length - 2
     end
 
     def render
-      min = scale_value(@series.min)
-      median = scale_value(@series.median)
-      max = scale_value(@series.max)
+      min = scale_value(@statistics.min)
+      median = scale_value(@statistics.median)
+      max = scale_value(@statistics.max)
 
       min_width = min
       median_width = median - min
@@ -329,8 +329,26 @@ class Ready
       return times_sorted[k] + (f * (times_sorted[k+1] - times_sorted[k]))
     end
 
+    def stats
+      SeriesStatistics.from_series(self)
+    end
+
     def stat_string
       "range: %.3f - %.3f ms" % [min, max]
+    end
+  end
+
+  class SeriesStatistics < Struct.new(:min,
+                                      :percentile_25,
+                                      :median,
+                                      :percentile_75,
+                                      :max)
+    def self.from_series(series)
+      new(series.min,
+          series.percentile(25),
+          series.median,
+          series.percentile(75),
+          series.max)
     end
   end
 end
