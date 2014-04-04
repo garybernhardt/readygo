@@ -222,10 +222,10 @@ class Ready
                    after.normal.max,
                    after.without_gc.max].max
       bars = [
-        build_bar(before.normal, max_value, bar_length),
-        build_bar(before.without_gc, max_value, bar_length),
-        build_bar(after.normal, max_value, bar_length),
-        build_bar(after.without_gc, max_value, bar_length),
+        BarRenderer.new(before.normal, max_value, bar_length).render,
+        BarRenderer.new(before.without_gc, max_value, bar_length).render,
+        BarRenderer.new(after.normal, max_value, bar_length).render,
+        BarRenderer.new(after.without_gc, max_value, bar_length).render,
         legend(max_value, bar_length),
       ]
       titles.zip(bars).map do |title, bar|
@@ -233,13 +233,24 @@ class Ready
       end
     end
 
-    def build_bar(series, max_value, bar_length)
-      # Make room for pipes on either side
-      bar_length = bar_length - 2
+    def legend(max_value, bar_length)
+      formatted_max = "%.3g" % max_value
+      "0" + formatted_max.rjust(bar_length - 1)
+    end
+  end
 
-      min = scale_value(series.min, max_value, bar_length)
-      median = scale_value(series.median, max_value, bar_length)
-      max = scale_value(series.max, max_value, bar_length)
+  class BarRenderer
+    def initialize(series, max_value, bar_length)
+      @series = series
+      @max_value = max_value
+      # Make room for pipes that we'll add to either side of the bar
+      @bar_length = bar_length - 2
+    end
+
+    def render
+      min = scale_value(@series.min)
+      median = scale_value(@series.median)
+      max = scale_value(@series.max)
 
       min_width = min
       median_width = median - min
@@ -258,18 +269,13 @@ class Ready
         ("-" * median_width) +
         "*" +
         ("-" * max_width) +
-        (" " * (bar_length - max)) +
+        (" " * (@bar_length - max)) +
         "|"
       )
     end
 
-    def scale_value(value, max_value, bar_length)
-      (value.to_f / max_value.to_f * bar_length.to_f).round
-    end
-
-    def legend(max_value, bar_length)
-      formatted_max = "%.3g" % max_value
-      "0" + formatted_max.rjust(bar_length - 1)
+    def scale_value(value)
+      (value.to_f / @max_value.to_f * @bar_length.to_f).round
     end
   end
 
