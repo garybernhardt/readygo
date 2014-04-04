@@ -201,9 +201,11 @@ class Ready
 
     extend Forwardable
     def_delegators :@comparison, :before, :after
+    attr_reader :screen_width
 
-    def initialize(comparison)
+    def initialize(comparison, screen_width=SCREEN_WIDTH)
       @comparison = comparison
+      @screen_width = screen_width
     end
 
     def render
@@ -214,7 +216,7 @@ class Ready
         "After (No GC):  ",
         "                ", # legend
       ]
-      bar_length = SCREEN_WIDTH - titles.first.length
+      bar_length = screen_width - titles.first.length
       max_value = [before.normal.max,
                    before.without_gc.max,
                    after.normal.max,
