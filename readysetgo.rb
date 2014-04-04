@@ -1,6 +1,5 @@
 require "pp"
 require "json"
-require "forwardable"
 
 def ready(name, &block)
   name = name.to_s
@@ -199,14 +198,14 @@ class Ready
   class PlotRenderer
     SCREEN_WIDTH = 80
 
-    extend Forwardable
-    def_delegators :@comparison, :before, :after
-    attr_reader :screen_width
-
     def initialize(comparison, screen_width=SCREEN_WIDTH)
       @comparison = comparison
       @screen_width = screen_width
     end
+
+    def before; @comparison.before; end
+    def after; @comparison.after; end
+    def screen_width; @screen_width; end
 
     def render
       titles.zip(bars).map { |title, bar| title + bar }
