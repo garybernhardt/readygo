@@ -191,21 +191,20 @@ class Ready
     end
 
     def to_plot
-      PlotRenderer.new(self).render
+      PlotRenderer.new(self.before, self.after).render
     end
   end
 
   class PlotRenderer
     SCREEN_WIDTH = 80
 
-    def initialize(comparison, screen_width=SCREEN_WIDTH)
-      @comparison = comparison
+    attr_reader :before, :after, :screen_width
+
+    def initialize(before, after, screen_width=SCREEN_WIDTH)
+      @before = before
+      @after = after
       @screen_width = screen_width
     end
-
-    def before; @comparison.before; end
-    def after; @comparison.after; end
-    def screen_width; @screen_width; end
 
     def render
       titles.zip(bars).map { |title, bar| title + bar }
