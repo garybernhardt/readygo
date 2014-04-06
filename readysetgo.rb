@@ -262,26 +262,19 @@ class Ready
       median = scale_value(@statistics.median)
       max = scale_value(@statistics.max)
 
-      min_width = min
-      median_width = median - min
-      max_width = max - median
-
-      # Make room for median marker
-      if median_width == 0
-        min_width -= 1
-      else
-        median_width -= 1
-      end
-
-      (
-        "|" +
-        (" " * min_width) +
-        ("-" * median_width) +
-        "*" +
-        ("-" * max_width) +
-        (" " * (@bar_length - max)) +
-        "|"
-      )
+      chars = (1..@bar_length).map do |i|
+        case
+        when i == median
+          "*"
+        when i >= min && i < median
+          "-"
+        when i <= max && i > median
+          "-"
+        else
+          " "
+        end
+      end.join
+      "|" + chars + "|"
     end
 
     def scale_value(value)
