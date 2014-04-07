@@ -1,7 +1,7 @@
 require_relative "readysetgo"
 
-ready "Allocation" do
-  go("#close") do
-    sleep(0.01)
+ready "something" do
+  go("something") do
+    rand * 0.5
   end
 end
