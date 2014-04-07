@@ -55,8 +55,19 @@ class Ready
 
   def finish
     dump_results if @record
-    Ready.show_comparison if @compare
+    show_comparison if @compare
   end
+
+  def show_comparison
+    old_suite = Suite.load
+    new_suite = Ready.suite
+    comparisons = Comparison.from_suites(old_suite, new_suite)
+    comparisons.each do |comparison|
+      puts comparison.name
+      puts comparison.to_plot.map { |s| "  " + s }.join("\n")
+    end
+  end
+
 
   def dump_results
     File.write(".readygo", JSON.dump(self.class.suite.to_hash))
@@ -143,15 +154,6 @@ class Ready
                                :max)
   end
 
-  def self.show_comparison
-    old_suite = Suite.load
-    new_suite = self.suite
-    comparisons = Comparison.from_suites(old_suite, new_suite)
-    comparisons.each do |comparison|
-      puts comparison.name
-      puts comparison.to_plot.map { |s| "  " + s }.join("\n")
-    end
-  end
 
   def run(go_block, allow_gc=true)
     times = []
