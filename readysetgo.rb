@@ -15,7 +15,7 @@ def ready(name, &block)
   else
     iterations = 16
   end
-  ready = Ready.new(name, iterations, mode)
+  ready = Ready.create(name, iterations, mode)
   ready.instance_eval(&block)
   ready.finish
 end
@@ -27,12 +27,22 @@ class Ready
     end
   end
 
-  def initialize(name, iterations, mode)
+  def initialize(name, iterations, mode, old_suite)
     @name = name
     @set_block = lambda { }
     @after_block = lambda { }
     @iterations = iterations
     @mode = mode
+    @old_suite = old_suite
+  end
+
+  def self.create(name, iterations, mode)
+    if mode == :compare
+      old_suite = Suite.load
+    else
+      old_suite = nil
+    end
+    new(name, iterations, mode, old_suite)
   end
 
   def set(&block)
@@ -66,9 +76,8 @@ class Ready
   end
 
   def show_comparison
-    old_suite = Suite.load
     new_suite = Ready.suite
-    comparisons = Comparison.from_suites(old_suite, new_suite)
+    comparisons = Comparison.from_suites(@old_suite, new_suite)
     comparisons.each do |comparison|
       puts comparison.name
       puts comparison.to_plot.map { |s| "  " + s }.join("\n")
