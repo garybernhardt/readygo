@@ -3,14 +3,19 @@ require "json"
 
 def ready(name, &block)
   name = name.to_s
-  record = ARGV.include?("--record")
-  compare = ARGV.include?("--compare")
+  if ARGV.include?("--record")
+    mode = :record
+  elsif ARGV.include?("--compare")
+    mode = :compare
+  else
+    usage
+  end
   if (index = ARGV.index("--iterations"))
     iterations = ARGV[index + 1].to_i
   else
     iterations = 16
   end
-  ready = Ready.new(name, iterations, record, compare)
+  ready = Ready.new(name, iterations, mode)
   ready.instance_eval(&block)
   ready.finish
 end
@@ -22,13 +27,12 @@ class Ready
     end
   end
 
-  def initialize(name, iterations, record, compare)
+  def initialize(name, iterations, mode)
     @name = name
     @set_block = lambda { }
     @after_block = lambda { }
     @iterations = iterations
-    @record = record
-    @compare = compare
+    @mode = mode
   end
 
   def set(&block)
@@ -54,8 +58,11 @@ class Ready
   end
 
   def finish
-    dump_results if @record
-    show_comparison if @compare
+    if @mode == :record
+      dump_results
+    elsif @mode == :compare
+      show_comparison
+    end
   end
 
   def show_comparison
