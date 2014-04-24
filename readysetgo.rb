@@ -57,7 +57,7 @@ class Context
 
     normal = run(go_block, true)
     no_gc = run(go_block, false)
-    @suite.add(RunResult.new(@name + " " + name, normal, no_gc))
+    @suite = @suite.add(RunResult.new(@name + " " + name, normal, no_gc))
 
     STDERR.puts
   end
@@ -101,7 +101,7 @@ class Suite
   end
 
   def add(run)
-    @runs << run
+    Suite.new(@runs + [run])
   end
 
   def run_names
