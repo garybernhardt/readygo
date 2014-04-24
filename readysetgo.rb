@@ -82,233 +82,233 @@ class Ready
   def dump_results
     File.write(".readygo", JSON.dump(@suite.to_hash))
   end
+end
 
-  class Suite
-    attr_reader :runs
+class Suite
+  attr_reader :runs
 
-    def initialize(runs=[])
-      @runs = runs
+  def initialize(runs=[])
+    @runs = runs
+  end
+
+  def self.load
+    old_results = JSON.parse(File.read(".readygo"))
+    runs = old_results.each_pair.map do |name, times|
+      normal_times, no_gc_times = times
+      RunResult.new(name, normal_times, no_gc_times)
     end
+    new(runs)
+  end
 
-    def self.load
-      old_results = JSON.parse(File.read(".readygo"))
-      runs = old_results.each_pair.map do |name, times|
-        normal_times, no_gc_times = times
-        RunResult.new(name, normal_times, no_gc_times)
+  def add(run)
+    @runs << run
+  end
+
+  def run_names
+    @runs.map(&:name)
+  end
+
+  def run_named(name)
+    run = @runs.find { |run| run.name == name }
+    run or raise "Couldn't find run: #{name.inspect}"
+  end
+
+  def to_hash
+    Hash[runs.map do |run|
+      [run.name, [run.normal.times, run.without_gc.times]]
+    end]
+  end
+end
+
+def run(go_block, allow_gc=true)
+  times = []
+  gc_times = []
+
+  (0...@iterations).each do
+    @set_block.call
+
+    # Get as clean a GC state as we can before benchmarking
+    GC.start
+
+    GC.disable unless allow_gc
+    start = Time.now
+    go_block.call
+    end_time = Time.now
+    time_in_ms = (end_time - start) * 1000
+    times << time_in_ms
+    GC.enable unless allow_gc
+    GC.start unless allow_gc
+
+    @after_block.call
+
+    STDERR.write "."
+    STDERR.flush
+  end
+
+  times
+end
+
+class Comparison < Struct.new(:name, :before, :after)
+  def self.from_suites(old_suite, new_suite)
+    names = new_suite.run_names
+    names.map do |name|
+      Comparison.new(name,
+                     old_suite.run_named(name),
+                     new_suite.run_named(name))
+    end
+  end
+
+  def to_plot
+    PlotRenderer.new(self.before, self.after).render
+  end
+end
+
+class PlotRenderer
+  SCREEN_WIDTH = 80
+
+  attr_reader :before, :after, :screen_width
+
+  def initialize(before, after, screen_width=SCREEN_WIDTH)
+    @before = before
+    @after = after
+    @screen_width = screen_width
+  end
+
+  def render
+    titles.zip(bars).map { |title, bar| title + bar }
+  end
+
+  def titles
+    [
+      "Before (GC):    ",
+      "Before (No GC): ",
+      "After (GC):     ",
+      "After (No GC):  ",
+      "                ", # legend
+    ]
+  end
+
+  def bars
+    [
+      BarRenderer.new(before.normal.stats, max_value, bar_length).render,
+      BarRenderer.new(before.without_gc.stats, max_value, bar_length).render,
+      BarRenderer.new(after.normal.stats, max_value, bar_length).render,
+      BarRenderer.new(after.without_gc.stats, max_value, bar_length).render,
+      legend,
+    ]
+  end
+
+  def legend
+    formatted_max = "%.3g" % max_value
+    "0" + formatted_max.rjust(bar_length - 1)
+  end
+
+  def max_value
+    [
+      before.normal.max,
+      before.without_gc.max,
+      after.normal.max,
+      after.without_gc.max
+    ].max
+  end
+
+  def bar_length
+    screen_width - titles.first.length
+  end
+end
+
+class BarRenderer
+  def initialize(series_statistics, max_value, bar_length)
+    @statistics = series_statistics
+    @max_value = max_value
+    # Make room for pipes that we'll add to either side of the bar
+    @bar_length = bar_length - 2
+  end
+
+  def render
+    min = scale_value(@statistics.min)
+    median = scale_value(@statistics.median)
+    max = scale_value(@statistics.max)
+
+    chars = (1..@bar_length).map do |i|
+      case
+      when i == median
+        "*"
+      when i >= min && i < median
+        "-"
+      when i <= max && i > median
+        "-"
+      else
+        " "
       end
-      new(runs)
-    end
-
-    def add(run)
-      @runs << run
-    end
-
-    def run_names
-      @runs.map(&:name)
-    end
-
-    def run_named(name)
-      run = @runs.find { |run| run.name == name }
-      run or raise "Couldn't find run: #{name.inspect}"
-    end
-
-    def to_hash
-      Hash[runs.map do |run|
-        [run.name, [run.normal.times, run.without_gc.times]]
-      end]
-    end
+    end.join
+    "|" + chars + "|"
   end
 
-  def run(go_block, allow_gc=true)
-    times = []
-    gc_times = []
+  def scale_value(value)
+    (value.to_f / @max_value.to_f * @bar_length.to_f).round
+  end
+end
 
-    (0...@iterations).each do
-      @set_block.call
+class RunResult
+  attr_reader :name, :normal, :without_gc
 
-      # Get as clean a GC state as we can before benchmarking
-      GC.start
+  def initialize(name, normal_times, no_gc_times)
+    @name = name
+    @normal = Series.new(normal_times)
+    @without_gc = Series.new(no_gc_times)
+  end
+end
 
-      GC.disable unless allow_gc
-      start = Time.now
-      go_block.call
-      end_time = Time.now
-      time_in_ms = (end_time - start) * 1000
-      times << time_in_ms
-      GC.enable unless allow_gc
-      GC.start unless allow_gc
+class Series
+  attr_reader :times
 
-      @after_block.call
-
-      STDERR.write "."
-      STDERR.flush
-    end
-
-    times
+  def initialize(times)
+    @times = times
   end
 
-  class Comparison < Struct.new(:name, :before, :after)
-    def self.from_suites(old_suite, new_suite)
-      names = new_suite.run_names
-      names.map do |name|
-        Comparison.new(name,
-                       old_suite.run_named(name),
-                       new_suite.run_named(name))
-      end
-    end
-
-    def to_plot
-      PlotRenderer.new(self.before, self.after).render
-    end
+  def median
+    percentile(50)
   end
 
-  class PlotRenderer
-    SCREEN_WIDTH = 80
-
-    attr_reader :before, :after, :screen_width
-
-    def initialize(before, after, screen_width=SCREEN_WIDTH)
-      @before = before
-      @after = after
-      @screen_width = screen_width
-    end
-
-    def render
-      titles.zip(bars).map { |title, bar| title + bar }
-    end
-
-    def titles
-      [
-        "Before (GC):    ",
-        "Before (No GC): ",
-        "After (GC):     ",
-        "After (No GC):  ",
-        "                ", # legend
-      ]
-    end
-
-    def bars
-      [
-        BarRenderer.new(before.normal.stats, max_value, bar_length).render,
-        BarRenderer.new(before.without_gc.stats, max_value, bar_length).render,
-        BarRenderer.new(after.normal.stats, max_value, bar_length).render,
-        BarRenderer.new(after.without_gc.stats, max_value, bar_length).render,
-        legend,
-      ]
-    end
-
-    def legend
-      formatted_max = "%.3g" % max_value
-      "0" + formatted_max.rjust(bar_length - 1)
-    end
-
-    def max_value
-      [
-        before.normal.max,
-        before.without_gc.max,
-        after.normal.max,
-        after.without_gc.max
-      ].max
-    end
-
-    def bar_length
-      screen_width - titles.first.length
-    end
+  def min
+    times.min
   end
 
-  class BarRenderer
-    def initialize(series_statistics, max_value, bar_length)
-      @statistics = series_statistics
-      @max_value = max_value
-      # Make room for pipes that we'll add to either side of the bar
-      @bar_length = bar_length - 2
-    end
-
-    def render
-      min = scale_value(@statistics.min)
-      median = scale_value(@statistics.median)
-      max = scale_value(@statistics.max)
-
-      chars = (1..@bar_length).map do |i|
-        case
-        when i == median
-          "*"
-        when i >= min && i < median
-          "-"
-        when i <= max && i > median
-          "-"
-        else
-          " "
-        end
-      end.join
-      "|" + chars + "|"
-    end
-
-    def scale_value(value)
-      (value.to_f / @max_value.to_f * @bar_length.to_f).round
-    end
+  def max
+    times.max
   end
 
-  class RunResult
-    attr_reader :name, :normal, :without_gc
+  def percentile(percentile)
+    ratio = percentile * 0.01
+    return times.min if percentile == 0
+    return times.max if percentile == 100
+    times_sorted = times.sort
+    k = (ratio*(times_sorted.length-1)+1).floor - 1
+    f = (ratio*(times_sorted.length-1)+1).modulo(1)
 
-    def initialize(name, normal_times, no_gc_times)
-      @name = name
-      @normal = Series.new(normal_times)
-      @without_gc = Series.new(no_gc_times)
-    end
+    return times_sorted[k] + (f * (times_sorted[k+1] - times_sorted[k]))
   end
 
-  class Series
-    attr_reader :times
-
-    def initialize(times)
-      @times = times
-    end
-
-    def median
-      percentile(50)
-    end
-
-    def min
-      times.min
-    end
-
-    def max
-      times.max
-    end
-
-    def percentile(percentile)
-      ratio = percentile * 0.01
-      return times.min if percentile == 0
-      return times.max if percentile == 100
-      times_sorted = times.sort
-      k = (ratio*(times_sorted.length-1)+1).floor - 1
-      f = (ratio*(times_sorted.length-1)+1).modulo(1)
-
-      return times_sorted[k] + (f * (times_sorted[k+1] - times_sorted[k]))
-    end
-
-    def stats
-      SeriesStatistics.from_series(self)
-    end
-
-    def stat_string
-      "range: %.3f - %.3f ms" % [min, max]
-    end
+  def stats
+    SeriesStatistics.from_series(self)
   end
 
-  class SeriesStatistics < Struct.new(:min,
-                                      :percentile_25,
-                                      :median,
-                                      :percentile_75,
-                                      :max)
-    def self.from_series(series)
-      new(series.min,
-          series.percentile(25),
-          series.median,
-          series.percentile(75),
-          series.max)
-    end
+  def stat_string
+    "range: %.3f - %.3f ms" % [min, max]
+  end
+end
+
+class SeriesStatistics < Struct.new(:min,
+                                    :percentile_25,
+                                    :median,
+                                    :percentile_75,
+                                    :max)
+  def self.from_series(series)
+    new(series.min,
+        series.percentile(25),
+        series.median,
+        series.percentile(75),
+        series.max)
   end
 end
