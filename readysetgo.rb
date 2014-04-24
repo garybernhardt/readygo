@@ -21,12 +21,6 @@ def ready(name, &block)
 end
 
 class Ready
-  class << self
-    def suite
-      @suite ||= Suite.new
-    end
-  end
-
   def initialize(name, iterations, mode, old_suite)
     @name = name
     @set_block = lambda { }
@@ -34,6 +28,7 @@ class Ready
     @iterations = iterations
     @mode = mode
     @old_suite = old_suite
+    @suite = Suite.new
   end
 
   def self.create(name, iterations, mode)
@@ -62,7 +57,7 @@ class Ready
 
     normal = run(go_block, true)
     no_gc = run(go_block, false)
-    self.class.suite.add(RunResult.new(@name + " " + name, normal, no_gc))
+    @suite.add(RunResult.new(@name + " " + name, normal, no_gc))
 
     STDERR.puts
   end
@@ -76,8 +71,7 @@ class Ready
   end
 
   def show_comparison
-    new_suite = Ready.suite
-    comparisons = Comparison.from_suites(@old_suite, new_suite)
+    comparisons = Comparison.from_suites(@old_suite, @suite)
     comparisons.each do |comparison|
       puts comparison.name
       puts comparison.to_plot.map { |s| "  " + s }.join("\n")
@@ -86,7 +80,7 @@ class Ready
 
 
   def dump_results
-    File.write(".readygo", JSON.dump(self.class.suite.to_hash))
+    File.write(".readygo", JSON.dump(@suite.to_hash))
   end
 
   class Suite
