@@ -15,7 +15,8 @@ def ready(name, &block)
   else
     iterations = 16
   end
-  ready = Context.create(name, iterations, mode)
+  old_suite = Suite.load
+  ready = Context.new(name, iterations, mode, old_suite)
   ready.instance_eval(&block)
   ready.finish
 end
@@ -29,15 +30,6 @@ class Context
     @mode = mode
     @old_suite = old_suite
     @suite = Suite.new
-  end
-
-  def self.create(name, iterations, mode)
-    if mode == :compare
-      old_suite = Suite.load
-    else
-      old_suite = nil
-    end
-    new(name, iterations, mode, old_suite)
   end
 
   def set(&block)
