@@ -15,12 +15,12 @@ def ready(name, &block)
   else
     iterations = 16
   end
-  ready = Ready.create(name, iterations, mode)
+  ready = Context.create(name, iterations, mode)
   ready.instance_eval(&block)
   ready.finish
 end
 
-class Ready
+class Context
   def initialize(name, iterations, mode, old_suite)
     @name = name
     @set_block = lambda { }
