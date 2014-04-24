@@ -125,52 +125,6 @@ class Ready
     end
   end
 
-  class Table
-    def initialize(rectangle)
-      @rectangle = rectangle
-    end
-
-    def count
-      @rectangle.count
-    end
-
-    def first
-      @rectangle.first
-    end
-
-    def select(params)
-      result = @rectangle
-      params.each do |key, value|
-        result = result.select { |row| row.send(key) == value }
-      end
-      Table.new(result)
-    end
-
-    def find(params)
-      rect = select(params)
-      if rect.count == 1
-        rect.first
-      else
-        raise "Table#find found #{rect.count} results for #{params.inspect}"
-      end
-    end
-
-    def row_values(row_name)
-      @rectangle.map(&row_name).uniq
-    end
-  end
-
-  class DataPoint < Struct.new(:experiment_name,
-                               :run_name,
-                               :run_type,
-                               :min,
-                               :percentile_25,
-                               :median,
-                               :percenile_75,
-                               :max)
-  end
-
-
   def run(go_block, allow_gc=true)
     times = []
     gc_times = []
