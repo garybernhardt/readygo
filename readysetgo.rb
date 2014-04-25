@@ -90,8 +90,8 @@ module Ready
 
       STDERR.write @name + " "
 
-      normal = run2
-      no_gc = disable_gc { run2 }
+      normal = record_run_times
+      no_gc = disable_gc { record_run_times }
 
       STDERR.puts
       Benchmark.new(@name, normal, no_gc)
@@ -108,7 +108,7 @@ module Ready
       GC.start
     end
 
-    def run2
+    def record_run_times
       (0...Ready::ITERATIONS).map do
         @blocks.before.call
 
