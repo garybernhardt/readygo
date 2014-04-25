@@ -9,20 +9,35 @@ end
 module Ready
   ITERATIONS = 16
 
+  def self.main
+    load_files(configuration.files)
+  end
+
   def self.ready(name, &block)
     name = name.to_s
-    configuration = Configuration.parse_options(ARGV)
+    load_files(configuration.files)
     old_suite = Suite.load
     ready = Context.new(name, configuration, old_suite)
     ready.instance_eval(&block)
     ready.finish
   end
 
-  class Configuration < Struct.new(:record, :compare)
+  def self.configuration
+    @configuration ||= Configuration.parse_options(ARGV)
+  end
+
+  def self.load_files(files)
+    $LOAD_PATH << "."
+    files.each { |file| require file }
+  end
+
+  class Configuration < Struct.new(:record, :compare, :files)
     alias_method :record?, :record
     alias_method :compare?, :compare
 
     def self.parse_options(argv)
+      argv = argv.dup
+
       record = false
       compare = false
 
@@ -39,7 +54,7 @@ module Ready
       end
 
       begin
-        parser.parse(argv)
+        parser.parse!(argv)
       rescue OptionParser::InvalidOption => e
         $stderr.puts e
         usage(parser)
@@ -47,7 +62,8 @@ module Ready
 
       usage(parser) unless record || compare
 
-      new(record, compare)
+      files = argv
+      new(record, compare, files)
     end
 
     def self.usage(parser)
@@ -357,4 +373,8 @@ module Ready
           series.max)
     end
   end
+end
+
+if $0 == __FILE__
+  Ready.main
 end
