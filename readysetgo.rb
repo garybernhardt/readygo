@@ -109,25 +109,21 @@ module Ready
     end
 
     def run2
-      times = []
-      gc_times = []
-
-      (0...Ready::ITERATIONS).each do
+      (0...Ready::ITERATIONS).map do
         @blocks.before.call
 
         start = Time.now
         @blocks.benchmark.call
         end_time = Time.now
         time_in_ms = (end_time - start) * 1000
-        times << time_in_ms
 
         @blocks.after.call
 
         STDERR.write "."
         STDERR.flush
-      end
 
-      times
+        time_in_ms
+      end
     end
   end
 
