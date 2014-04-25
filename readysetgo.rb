@@ -89,6 +89,7 @@ module Ready
     def show_comparison
       comparisons = Comparison.from_suites(@old_suite, @suite)
       comparisons.each do |comparison|
+        puts
         puts comparison.name
         puts comparison.to_plot.map { |s| "  " + s }.join("\n")
       end
