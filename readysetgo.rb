@@ -23,6 +23,11 @@ module Ready
     ready.finish
   end
 
+  def self.usage
+    STDERR.puts "Usage: #{$PROGRAM_NAME} [--record | --compare]"
+    exit(1)
+  end
+
   class Context
     def initialize(name, mode, old_suite)
       @name = name
