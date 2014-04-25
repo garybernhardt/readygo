@@ -112,6 +112,16 @@ class Suite
   end
 end
 
+class RunResult
+  attr_reader :name, :normal, :without_gc
+
+  def initialize(name, normal_times, no_gc_times)
+    @name = name
+    @normal = Series.new(normal_times)
+    @without_gc = Series.new(no_gc_times)
+  end
+end
+
 def run(go_block, allow_gc=true)
   times = []
   gc_times = []
@@ -239,16 +249,6 @@ class BarRenderer
 
   def scale_value(value)
     (value.to_f / @max_value.to_f * @bar_length.to_f).round
-  end
-end
-
-class RunResult
-  attr_reader :name, :normal, :without_gc
-
-  def initialize(name, normal_times, no_gc_times)
-    @name = name
-    @normal = Series.new(normal_times)
-    @without_gc = Series.new(no_gc_times)
   end
 end
 
