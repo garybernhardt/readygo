@@ -69,6 +69,34 @@ class Context
       puts comparison.to_plot.map { |s| "  " + s }.join("\n")
     end
   end
+
+  def run(go_block, allow_gc=true)
+    times = []
+    gc_times = []
+
+    (0...@iterations).each do
+      @set_block.call
+
+      # Get as clean a GC state as we can before benchmarking
+      GC.start
+
+      GC.disable unless allow_gc
+      start = Time.now
+      go_block.call
+      end_time = Time.now
+      time_in_ms = (end_time - start) * 1000
+      times << time_in_ms
+      GC.enable unless allow_gc
+      GC.start unless allow_gc
+
+      @after_block.call
+
+      STDERR.write "."
+      STDERR.flush
+    end
+
+    times
+  end
 end
 
 class Suite
@@ -119,34 +147,6 @@ class Benchmark
     @normal = Series.new(normal_times)
     @without_gc = Series.new(no_gc_times)
   end
-end
-
-def run(go_block, allow_gc=true)
-  times = []
-  gc_times = []
-
-  (0...@iterations).each do
-    @set_block.call
-
-    # Get as clean a GC state as we can before benchmarking
-    GC.start
-
-    GC.disable unless allow_gc
-    start = Time.now
-    go_block.call
-    end_time = Time.now
-    time_in_ms = (end_time - start) * 1000
-    times << time_in_ms
-    GC.enable unless allow_gc
-    GC.start unless allow_gc
-
-    @after_block.call
-
-    STDERR.write "."
-    STDERR.flush
-  end
-
-  times
 end
 
 class Comparison < Struct.new(:name, :before, :after)
