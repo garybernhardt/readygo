@@ -47,17 +47,10 @@ module Ready
     end
 
     def go(name, &go_block)
-      # Prime
-      @set_block.call
-      go_block.call
-
-      STDERR.write "#{@name} #{name} "
-
-      normal = run(go_block, true)
-      no_gc = run(go_block, false)
-      @suite = @suite.add(Benchmark.new(@name + " " + name, normal, no_gc))
-
-      STDERR.puts
+      blocks = Blocks.new(@set_block, @after_block, go_block)
+      full_name = @name + " " + name
+      benchmark = Runner.new(full_name, blocks).run
+      @suite = @suite.add(benchmark)
     end
 
     def finish
@@ -75,27 +68,51 @@ module Ready
         puts comparison.to_plot.map { |s| "  " + s }.join("\n")
       end
     end
+  end
 
-    def run(go_block, allow_gc=true)
+  class Blocks < Struct.new(:before, :after, :benchmark)
+  end
+
+  class Runner
+    def initialize(name, blocks)
+      @name = name
+      @blocks = blocks
+    end
+
+    def run
+      # Prime
+      @blocks.before.call
+      @blocks.benchmark.call
+
+      STDERR.write @name + " "
+
+      normal = run2(true)
+      no_gc = run2(false)
+
+      STDERR.puts
+      Benchmark.new(@name, normal, no_gc)
+    end
+
+    def run2(allow_gc=true)
       times = []
       gc_times = []
 
       (0...Ready::ITERATIONS).each do
-        @set_block.call
+        @blocks.before.call
 
         # Get as clean a GC state as we can before benchmarking
         GC.start
 
         GC.disable unless allow_gc
         start = Time.now
-        go_block.call
+        @blocks.benchmark.call
         end_time = Time.now
         time_in_ms = (end_time - start) * 1000
         times << time_in_ms
         GC.enable unless allow_gc
         GC.start unless allow_gc
 
-        @after_block.call
+        @blocks.after.call
 
         STDERR.write "."
         STDERR.flush
