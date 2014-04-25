@@ -2,23 +2,29 @@ require "pp"
 require "json"
 
 def ready(name, &block)
-  name = name.to_s
-  if ARGV.include?("--record")
-    mode = :record
-  elsif ARGV.include?("--compare")
-    mode = :compare
-  else
-    usage
+  Ready.ready(name, &block)
+end
+
+module Ready
+  def self.ready(name, &block)
+    name = name.to_s
+    if ARGV.include?("--record")
+      mode = :record
+    elsif ARGV.include?("--compare")
+      mode = :compare
+    else
+      usage
+    end
+    if (index = ARGV.index("--iterations"))
+      iterations = ARGV[index + 1].to_i
+    else
+      iterations = 16
+    end
+    old_suite = Suite.load
+    ready = Context.new(name, iterations, mode, old_suite)
+    ready.instance_eval(&block)
+    ready.finish
   end
-  if (index = ARGV.index("--iterations"))
-    iterations = ARGV[index + 1].to_i
-  else
-    iterations = 16
-  end
-  old_suite = Suite.load
-  ready = Context.new(name, iterations, mode, old_suite)
-  ready.instance_eval(&block)
-  ready.finish
 end
 
 class Context
