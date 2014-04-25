@@ -11,15 +11,16 @@ module Ready
 
   def self.main
     load_files(configuration.files)
+    Context.all.each { |context| context.finish }
   end
 
   def self.ready(name, &block)
     name = name.to_s
     load_files(configuration.files)
     old_suite = Suite.load
-    ready = Context.new(name, configuration, old_suite)
-    ready.instance_eval(&block)
-    ready.finish
+    context = Context.new(name, configuration, old_suite)
+    context.instance_eval(&block)
+    Context.all << context
   end
 
   def self.configuration
@@ -27,7 +28,7 @@ module Ready
   end
 
   def self.load_files(files)
-    $LOAD_PATH << "."
+    $LOAD_PATH.unshift "."
     files.each { |file| require file }
   end
 
@@ -77,9 +78,14 @@ module Ready
       @name = name
       @set_block = lambda { }
       @after_block = lambda { }
+      @all_blocks = []
       @configuration = configuration
       @old_suite = old_suite
       @suite = Suite.new
+    end
+
+    def self.all
+      @all ||= []
     end
 
     def set(&block)
@@ -90,14 +96,17 @@ module Ready
       @after_block = block
     end
 
-    def go(name, &go_block)
-      blocks = Blocks.new(@set_block, @after_block, go_block)
-      full_name = @name + " " + name
-      benchmark = Runner.new(full_name, blocks).run
-      @suite = @suite.add(benchmark)
+    def go(name, &block)
+        full_name = @name + " " + name
+      @all_blocks << Blocks.new(full_name, @set_block, @after_block, block)
     end
 
     def finish
+      @all_blocks.each do |blocks|
+        benchmark = Runner.new(blocks).run
+        @suite = @suite.add(benchmark)
+      end
+
       @suite.save! if @configuration.record?
       show_comparison if @configuration.compare?
     end
@@ -112,12 +121,11 @@ module Ready
     end
   end
 
-  class Blocks < Struct.new(:before, :after, :benchmark)
+  class Blocks < Struct.new(:name, :before, :after, :benchmark)
   end
 
   class Runner
-    def initialize(name, blocks)
-      @name = name
+    def initialize(blocks)
       @blocks = blocks
     end
 
@@ -130,13 +138,13 @@ module Ready
       @blocks.before.call
       @blocks.benchmark.call
 
-      STDERR.write @name + " "
+      STDERR.write @blocks.name + " "
 
       normal = record_run_times
       no_gc = disable_gc { record_run_times }
 
       STDERR.puts
-      Benchmark.new(@name, normal, no_gc)
+      Benchmark.new(@blocks.name, normal, no_gc)
     end
 
     def disable_gc
