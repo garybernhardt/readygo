@@ -1,5 +1,6 @@
 require "pp"
 require "json"
+require "optparse"
 
 def ready(name, &block)
   Ready.ready(name, &block)
@@ -10,30 +11,57 @@ module Ready
 
   def self.ready(name, &block)
     name = name.to_s
-    if ARGV.include?("--record")
-      mode = :record
-    elsif ARGV.include?("--compare")
-      mode = :compare
-    else
-      usage
-    end
+    configuration = Configuration.parse_options(ARGV)
     old_suite = Suite.load
-    ready = Context.new(name, mode, old_suite)
+    ready = Context.new(name, configuration, old_suite)
     ready.instance_eval(&block)
     ready.finish
   end
 
-  def self.usage
-    STDERR.puts "Usage: #{$PROGRAM_NAME} [--record | --compare]"
-    exit(1)
+  class Configuration < Struct.new(:record, :compare)
+    alias_method :record?, :record
+    alias_method :compare?, :compare
+
+    def self.parse_options(argv)
+      record = false
+      compare = false
+
+      parser = OptionParser.new do |opts|
+        opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
+
+        opts.on("--record", "Record the benchmark times") do
+          record = true
+        end
+
+        opts.on("--compare", "Compare the benchmarks against the last saved run") do
+          compare = true
+        end
+      end
+
+      begin
+        parser.parse(argv)
+      rescue OptionParser::InvalidOption => e
+        $stderr.puts e
+        usage(parser)
+      end
+
+      usage(parser) unless record || compare
+
+      new(record, compare)
+    end
+
+    def self.usage(parser)
+      $stderr.puts parser
+      exit 1
+    end
   end
 
   class Context
-    def initialize(name, mode, old_suite)
+    def initialize(name, configuration, old_suite)
       @name = name
       @set_block = lambda { }
       @after_block = lambda { }
-      @mode = mode
+      @configuration = configuration
       @old_suite = old_suite
       @suite = Suite.new
     end
@@ -54,11 +82,8 @@ module Ready
     end
 
     def finish
-      if @mode == :record
-        @suite.save!
-      elsif @mode == :compare
-        show_comparison
-      end
+      @suite.save! if @configuration.record?
+      show_comparison if @configuration.compare?
     end
 
     def show_comparison
