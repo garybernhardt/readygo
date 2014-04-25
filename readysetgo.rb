@@ -49,7 +49,7 @@ class Context
 
     normal = run(go_block, true)
     no_gc = run(go_block, false)
-    @suite = @suite.add(RunResult.new(@name + " " + name, normal, no_gc))
+    @suite = @suite.add(Benchmark.new(@name + " " + name, normal, no_gc))
 
     STDERR.puts
   end
@@ -87,7 +87,7 @@ class Suite
     old_results = JSON.parse(File.read(".readygo"))
     runs = old_results.each_pair.map do |name, times|
       normal_times, no_gc_times = times
-      RunResult.new(name, normal_times, no_gc_times)
+      Benchmark.new(name, normal_times, no_gc_times)
     end
     new(runs)
   end
@@ -112,7 +112,7 @@ class Suite
   end
 end
 
-class RunResult
+class Benchmark
   attr_reader :name, :normal, :without_gc
 
   def initialize(name, normal_times, no_gc_times)
