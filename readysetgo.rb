@@ -56,7 +56,7 @@ class Context
 
   def finish
     if @mode == :record
-      dump_results
+      @suite.save!
     elsif @mode == :compare
       show_comparison
     end
@@ -68,11 +68,6 @@ class Context
       puts comparison.name
       puts comparison.to_plot.map { |s| "  " + s }.join("\n")
     end
-  end
-
-
-  def dump_results
-    File.write(".readygo", JSON.dump(@suite.to_hash))
   end
 end
 
@@ -103,6 +98,10 @@ class Suite
   def run_named(name)
     run = @runs.find { |run| run.name == name }
     run or raise "Couldn't find run: #{name.inspect}"
+  end
+
+  def save!
+    File.write(".readygo", JSON.dump(to_hash))
   end
 
   def to_hash
