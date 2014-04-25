@@ -6,6 +6,8 @@ def ready(name, &block)
 end
 
 module Ready
+  ITERATIONS = 16
+
   def self.ready(name, &block)
     name = name.to_s
     if ARGV.include?("--record")
@@ -15,23 +17,17 @@ module Ready
     else
       usage
     end
-    if (index = ARGV.index("--iterations"))
-      iterations = ARGV[index + 1].to_i
-    else
-      iterations = 16
-    end
     old_suite = Suite.load
-    ready = Context.new(name, iterations, mode, old_suite)
+    ready = Context.new(name, mode, old_suite)
     ready.instance_eval(&block)
     ready.finish
   end
 
   class Context
-    def initialize(name, iterations, mode, old_suite)
+    def initialize(name, mode, old_suite)
       @name = name
       @set_block = lambda { }
       @after_block = lambda { }
-      @iterations = iterations
       @mode = mode
       @old_suite = old_suite
       @suite = Suite.new
@@ -79,7 +75,7 @@ module Ready
       times = []
       gc_times = []
 
-      (0...@iterations).each do
+      (0...Ready::ITERATIONS).each do
         @set_block.call
 
         # Get as clean a GC state as we can before benchmarking
