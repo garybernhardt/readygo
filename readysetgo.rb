@@ -80,37 +80,46 @@ module Ready
     end
 
     def run
+      with_and_without_gc
+    end
+
+    def with_and_without_gc
       # Prime
       @blocks.before.call
       @blocks.benchmark.call
 
       STDERR.write @name + " "
 
-      normal = run2(true)
-      no_gc = run2(false)
+      normal = run2
+      no_gc = disable_gc { run2 }
 
       STDERR.puts
       Benchmark.new(@name, normal, no_gc)
     end
 
-    def run2(allow_gc=true)
+    def disable_gc
+      # Get as clean a GC state as we can before benchmarking
+      GC.start
+
+      GC.disable
+      yield
+    ensure
+      GC.enable
+      GC.start
+    end
+
+    def run2
       times = []
       gc_times = []
 
       (0...Ready::ITERATIONS).each do
         @blocks.before.call
 
-        # Get as clean a GC state as we can before benchmarking
-        GC.start
-
-        GC.disable unless allow_gc
         start = Time.now
         @blocks.benchmark.call
         end_time = Time.now
         time_in_ms = (end_time - start) * 1000
         times << time_in_ms
-        GC.enable unless allow_gc
-        GC.start unless allow_gc
 
         @blocks.after.call
 
