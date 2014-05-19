@@ -141,8 +141,8 @@ module Ready
 
       STDERR.write @blocks.name + " "
 
-      normal = record_run_times
-      no_gc = disable_gc { record_run_times }
+      normal = run_detecting_repetitions
+      no_gc = disable_gc { run_detecting_repetitions }
 
       STDERR.puts
       Benchmark.new(@blocks.name, normal, no_gc)
@@ -159,28 +159,40 @@ module Ready
       GC.start
     end
 
-    def record_run_times
-      (0...Ready::ITERATIONS).map do
+    def run_detecting_repetitions
+      repetitions = 1
+      begin
+        record_run_times(repetitions)
+      rescue TooSlow
+        repetitions *= 2
+        STDERR.write "!"
+        retry
+      end
+    end
+
+    def record_run_times(repetitions)
+      (0...Ready::ITERATIONS).map do |iteration|
         @blocks.before.call
 
         start = Time.now
-        @blocks.benchmark.call
+        repetitions.times { @blocks.benchmark.call }
         end_time = Time.now
         time_in_ms = (end_time - start) * 1000
 
         @blocks.after.call
 
-        if time_in_ms < Ready::MINIMUM_MS
-          STDERR.puts(
-            "\nWarning: runtime of %s ms is lower than suggested minimum of %s" %
-            [time_in_ms, Ready::MINIMUM_MS])
+        if iteration == 0 && time_in_ms < Ready::MINIMUM_MS
+          raise TooSlow.new
         end
 
         STDERR.write "."
         STDERR.flush
 
-        time_in_ms
+        time_in_ms / repetitions
       end
+    end
+
+    class TooSlow < RuntimeError
     end
   end
 
