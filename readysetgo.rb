@@ -347,7 +347,7 @@ module Ready
       median = scale_value(@statistics.median)
       max = scale_value(@statistics.max)
 
-      chars = (1..@bar_length).map do |i|
+      chars = (0...@bar_length).map do |i|
         case
         when i == median
           "X"
@@ -363,7 +363,8 @@ module Ready
     end
 
     def scale_value(value)
-      (value.to_f / @max_value.to_f * @bar_length.to_f).round
+      value = (value.to_f / @max_value.to_f * @bar_length.to_f).round
+      value = [value, @bar_length - 1].min
     end
   end
 
