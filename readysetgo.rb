@@ -399,7 +399,7 @@ module Ready
     end
 
     def stats
-      SeriesStatistics.from_series(self)
+      SeriesStatistics.new(min, median, max)
     end
 
     def stat_string
@@ -408,17 +408,8 @@ module Ready
   end
 
   class SeriesStatistics < Struct.new(:min,
-                                      :percentile_25,
                                       :median,
-                                      :percentile_75,
                                       :max)
-    def self.from_series(series)
-      new(series.min,
-          series.percentile(25),
-          series.median,
-          series.percentile(75),
-          series.max)
-    end
   end
 end
 
