@@ -347,7 +347,7 @@ module Ready
       chars = (1..@bar_length).map do |i|
         case
         when i == median
-          "*"
+          "X"
         when i >= min && i < median
           "-"
         when i <= max && i > median
