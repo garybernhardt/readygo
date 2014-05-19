@@ -8,6 +8,7 @@ end
 
 module Ready
   ITERATIONS = 16
+  MINIMUM_MS = 1
 
   def self.main
     load_files(configuration.files)
@@ -168,6 +169,12 @@ module Ready
         time_in_ms = (end_time - start) * 1000
 
         @blocks.after.call
+
+        if time_in_ms < Ready::MINIMUM_MS
+          STDERR.puts(
+            "\nWarning: runtime of %s ms is lower than suggested minimum of %s" %
+            [time_in_ms, Ready::MINIMUM_MS])
+        end
 
         STDERR.write "."
         STDERR.flush
