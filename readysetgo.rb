@@ -122,7 +122,10 @@ module Ready
     end
   end
 
-  class Blocks < Struct.new(:name, :before, :after, :benchmark)
+  class Blocks < Struct.new(:name, :before, :after, :benchmark, :nothing)
+    def initialize(name, before, after, benchmark)
+      super(name, before, after, benchmark, lambda { })
+    end
   end
 
   class Runner
@@ -174,10 +177,16 @@ module Ready
       (0...Ready::ITERATIONS).map do |iteration|
         @blocks.before.call
 
-        start = Time.now
-        repetitions.times { @blocks.benchmark.call }
-        end_time = Time.now
-        time_in_ms = (end_time - start) * 1000
+        # Compute the actual runtime and the constant time offset imposed by
+        # our benchmarking. These should be identical, down to the number of
+        # object accesses, so that the constant offset is accurate.
+        raw_time_in_ms = time do
+          repetitions.times { @blocks.benchmark.call }
+        end
+        constant_cost = time do
+          repetitions.times { @blocks.nothing.call }
+        end
+        time_in_ms = raw_time_in_ms - constant_cost
 
         @blocks.after.call
 
@@ -190,6 +199,13 @@ module Ready
 
         time_in_ms / repetitions
       end
+    end
+
+    def time(&block)
+      start = Time.now
+      block.call
+      end_time = Time.now
+      time_in_ms = (end_time - start) * 1000
     end
 
     class TooSlow < RuntimeError
