@@ -165,7 +165,7 @@ module Ready
     def run_detecting_repetitions
       repetitions = 1
       begin
-        record_run_times(repetitions)
+        capture_run_times(repetitions)
       rescue TooSlow
         repetitions *= 2
         STDERR.write "!"
@@ -173,7 +173,7 @@ module Ready
       end
     end
 
-    def record_run_times(repetitions)
+    def capture_run_times(repetitions)
       (0...Ready::ITERATIONS).map do |iteration|
         @blocks.before.call
 
@@ -190,6 +190,8 @@ module Ready
 
         @blocks.after.call
 
+        # Only check for too-slow benchmarks on the first iteration so we don't
+        # change the repetitions mid-benchmark.
         if iteration == 0 && time_in_ms < Ready::MINIMUM_MS
           raise TooSlow.new
         end
