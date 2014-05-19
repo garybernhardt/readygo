@@ -176,18 +176,7 @@ module Ready
     def capture_run_times(repetitions)
       (0...Ready::ITERATIONS).map do |iteration|
         @blocks.before.call
-
-        # Compute the actual runtime and the constant time offset imposed by
-        # our benchmarking. These should be identical, down to the number of
-        # object accesses, so that the constant offset is accurate.
-        raw_time_in_ms = time do
-          repetitions.times { @blocks.benchmark.call }
-        end
-        constant_cost = time do
-          repetitions.times { @blocks.nothing.call }
-        end
-        time_in_ms = raw_time_in_ms - constant_cost
-
+        time_in_ms = time_block_with_overhead_nulled_out(repetitions)
         @blocks.after.call
 
         # Only check for too-slow benchmarks on the first iteration so we don't
@@ -203,7 +192,19 @@ module Ready
       end
     end
 
-    def time(&block)
+    def time_block_with_overhead_nulled_out(repetitions)
+      # Compute the actual runtime and the constant time offset imposed by our
+      # benchmarking.
+      raw_time_in_ms = time_block do
+        repetitions.times { @blocks.benchmark.call }
+      end
+      constant_cost = time_block do
+        repetitions.times { @blocks.nothing.call }
+      end
+      raw_time_in_ms - constant_cost
+    end
+
+    def time_block(&block)
       start = Time.now
       block.call
       end_time = Time.now
