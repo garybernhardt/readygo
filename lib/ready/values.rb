@@ -24,12 +24,9 @@ module Ready
   class BenchmarkTime < Struct.new(:name, :time)
   end
 
-  class Benchmark
-    attr_reader :name, :times
-
+  class Benchmark < Struct.new(:name, :times)
     def initialize(name, times)
-      @name = name
-      @times = Series.new(times)
+      super(name, Series.new(times))
     end
   end
 
