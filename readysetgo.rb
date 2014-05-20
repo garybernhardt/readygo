@@ -154,6 +154,7 @@ module Ready
     end
 
     def run
+      prime_all_definitions
       benchmark_times, definitions = calibrate_repetitions
       remaining_iterations = ITERATIONS - 1
 
@@ -165,6 +166,10 @@ module Ready
       definitions = definitions * remaining_iterations
       benchmark_times += definitions.map { |definition| run_definition(definition) }
       assemble_benchmarks_from_times(benchmark_times)
+    end
+
+    def prime_all_definitions
+      @definitions.each { |definition| Runner.new(definition).prime }
     end
 
     def calibrate_repetitions
@@ -217,7 +222,7 @@ module Ready
   end
 
   class Runner
-    def initialize(definition, raise_if_too_slow)
+    def initialize(definition, raise_if_too_slow=false)
       @definition = definition
       @raise_if_too_slow = raise_if_too_slow
     end
@@ -226,12 +231,13 @@ module Ready
       @definition.repetitions
     end
 
-    def run
-      # Prime
+    def prime
       @definition.before_proc.call
       @definition.benchmark_proc.call
       @definition.after_proc.call
+    end
 
+    def run
       time = if @definition.enable_gc?
                capture_run_time
              else
