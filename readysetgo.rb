@@ -77,8 +77,8 @@ module Ready
   class Context
     def initialize(name, configuration, old_suite)
       @name = name
-      @set_block = lambda { }
-      @after_block = lambda { }
+      @set_proc = lambda { }
+      @after_proc = lambda { }
       @all_definitions = []
       @configuration = configuration
       @old_suite = old_suite
@@ -90,16 +90,16 @@ module Ready
     end
 
     def set(&block)
-      @set_block = block
+      @set_proc = block
     end
 
     def after(&block)
-      @after_block = block
+      @after_proc = block
     end
 
     def go(name, &block)
       full_name = @name + " " + name
-      @all_definitions << BenchmarkDefinition.new(full_name, @set_block, @after_block, block)
+      @all_definitions << BenchmarkDefinition.new(full_name, @set_proc, @after_proc, block)
     end
 
     def finish
@@ -125,9 +125,13 @@ module Ready
   # A benchmark specification, mostly composed of the relevant blocks. The
   # `nothing` attribute exists to provide a way to measure baseline
   # performance to null out benchmarking overhead.
-  class BenchmarkDefinition < Struct.new(:name, :before, :after, :benchmark, :nothing)
-    def initialize(name, before, after, benchmark)
-      super(name, before, after, benchmark, lambda { })
+  class BenchmarkDefinition < Struct.new(:name,
+                                         :before_proc,
+                                         :after_proc,
+                                         :benchmark_proc,
+                                         :nothing_proc)
+    def initialize(name, before_proc, after_proc, benchmark_proc)
+      super(name, before_proc, after_proc, benchmark_proc, lambda { })
     end
   end
 
@@ -142,9 +146,9 @@ module Ready
 
     def with_and_without_gc
       # Prime
-      @definition.before.call
-      @definition.benchmark.call
-      @definition.after.call
+      @definition.before_proc.call
+      @definition.benchmark_proc.call
+      @definition.after_proc.call
 
       STDERR.write @definition.name + " "
 
@@ -179,9 +183,9 @@ module Ready
 
     def capture_run_times(repetitions)
       (0...Ready::ITERATIONS).map do |iteration|
-        @definition.before.call
-        time_in_ms = time_block_with_overhead_nulled_out(repetitions)
-        @definition.after.call
+        @definition.before_proc.call
+        time_in_ms = time_proc_with_overhead_nulled_out(repetitions)
+        @definition.after_proc.call
 
         # Only check for too-slow benchmarks on the first iteration so we don't
         # change the repetitions mid-benchmark.
@@ -196,14 +200,14 @@ module Ready
       end
     end
 
-    def time_block_with_overhead_nulled_out(repetitions)
+    def time_proc_with_overhead_nulled_out(repetitions)
       # Compute the actual runtime and the constant time offset imposed by our
       # benchmarking.
       raw_time_in_ms = time_block do
-        repetitions.times { @definition.benchmark.call }
+        repetitions.times { @definition.benchmark_proc.call }
       end
       constant_cost = time_block do
-        repetitions.times { @definition.nothing.call }
+        repetitions.times { @definition.nothing_proc.call }
       end
       raw_time_in_ms - constant_cost
     end
