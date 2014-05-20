@@ -81,10 +81,13 @@ module Ready
     def time_gc_time(&block)
       # Get a clean GC state
       GC.start
+      GC::Profiler.enable
 
       GC::Profiler.clear
       block.call
       gc_time_in_ms = GC::Profiler.total_time
+      GC::Profiler.disable
+      p [repetitions, gc_time_in_ms]
       gc_time_in_ms
     end
 

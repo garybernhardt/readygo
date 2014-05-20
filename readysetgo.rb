@@ -15,7 +15,6 @@ module Ready
   MINIMUM_MS = 1
 
   def self.main
-    GC::Profiler.enable
     load_files(configuration.files)
     Context.all.each { |context| context.finish }
   end
