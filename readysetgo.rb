@@ -79,7 +79,7 @@ module Ready
       @name = name
       @set_block = lambda { }
       @after_block = lambda { }
-      @all_blocks = []
+      @all_definitions = []
       @configuration = configuration
       @old_suite = old_suite
       @suite = Suite.new
@@ -99,12 +99,12 @@ module Ready
 
     def go(name, &block)
       full_name = @name + " " + name
-      @all_blocks << Blocks.new(full_name, @set_block, @after_block, block)
+      @all_definitions << BenchmarkDefinition.new(full_name, @set_block, @after_block, block)
     end
 
     def finish
-      @all_blocks.each do |blocks|
-        benchmark = Runner.new(blocks).run
+      @all_definitions.each do |definition|
+        benchmark = Runner.new(definition).run
         @suite = @suite.add(benchmark)
       end
 
@@ -122,15 +122,18 @@ module Ready
     end
   end
 
-  class Blocks < Struct.new(:name, :before, :after, :benchmark, :nothing)
+  # A benchmark specification, mostly composed of the relevant blocks. The
+  # `nothing` attribute exists to provide a way to measure baseline
+  # performance to null out benchmarking overhead.
+  class BenchmarkDefinition < Struct.new(:name, :before, :after, :benchmark, :nothing)
     def initialize(name, before, after, benchmark)
       super(name, before, after, benchmark, lambda { })
     end
   end
 
   class Runner
-    def initialize(blocks)
-      @blocks = blocks
+    def initialize(definition)
+      @definition = definition
     end
 
     def run
@@ -139,17 +142,17 @@ module Ready
 
     def with_and_without_gc
       # Prime
-      @blocks.before.call
-      @blocks.benchmark.call
-      @blocks.after.call
+      @definition.before.call
+      @definition.benchmark.call
+      @definition.after.call
 
-      STDERR.write @blocks.name + " "
+      STDERR.write @definition.name + " "
 
       normal = run_detecting_repetitions
       no_gc = disable_gc { run_detecting_repetitions }
 
       STDERR.puts
-      Benchmark.new(@blocks.name, normal, no_gc)
+      Benchmark.new(@definition.name, normal, no_gc)
     end
 
     def disable_gc
@@ -176,9 +179,9 @@ module Ready
 
     def capture_run_times(repetitions)
       (0...Ready::ITERATIONS).map do |iteration|
-        @blocks.before.call
+        @definition.before.call
         time_in_ms = time_block_with_overhead_nulled_out(repetitions)
-        @blocks.after.call
+        @definition.after.call
 
         # Only check for too-slow benchmarks on the first iteration so we don't
         # change the repetitions mid-benchmark.
@@ -197,10 +200,10 @@ module Ready
       # Compute the actual runtime and the constant time offset imposed by our
       # benchmarking.
       raw_time_in_ms = time_block do
-        repetitions.times { @blocks.benchmark.call }
+        repetitions.times { @definition.benchmark.call }
       end
       constant_cost = time_block do
-        repetitions.times { @blocks.nothing.call }
+        repetitions.times { @definition.nothing.call }
       end
       raw_time_in_ms - constant_cost
     end
