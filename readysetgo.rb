@@ -98,7 +98,7 @@ module Ready
     end
 
     def go(name, &block)
-        full_name = @name + " " + name
+      full_name = @name + " " + name
       @all_blocks << Blocks.new(full_name, @set_block, @after_block, block)
     end
 
