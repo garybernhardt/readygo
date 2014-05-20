@@ -4,7 +4,7 @@ require "optparse"
 require_relative "lib/ready"
 
 def ready(name, &block)
-  Ready.ready(name, &block)
+  Ready.add_context(name, &block)
 end
 
 module Ready
@@ -16,7 +16,7 @@ module Ready
     Context.all.each { |context| context.finish }
   end
 
-  def self.ready(name, &block)
+  def self.add_context(name, &block)
     name = name.to_s
     load_files(configuration.files)
     old_suite = Suite.load
