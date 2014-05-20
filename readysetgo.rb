@@ -141,6 +141,7 @@ module Ready
       # Prime
       @blocks.before.call
       @blocks.benchmark.call
+      @blocks.after.call
 
       STDERR.write @blocks.name + " "
 
