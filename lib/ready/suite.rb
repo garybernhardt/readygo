@@ -7,7 +7,12 @@ module Ready
     end
 
     def self.load
-      serialized = JSON.parse(File.read(".readygo"))
+      begin
+        serialized = JSON.parse(File.read(".readygo"))
+      rescue Errno::ENOENT
+        return new
+      end
+
       version = serialized.fetch("readygo_file_format_version")
       unless version == Ready::FILE_FORMAT_VERSION
         raise "Cowardly refusing to load .readygo file in old format. Please delete it!"
