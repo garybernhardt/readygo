@@ -10,6 +10,8 @@ end
 
 module Ready
   ITERATIONS = 16
+  # For comparison, on OS X Mavericks Time.now seems to have a resolution of
+  # about 2 us.
   MINIMUM_MS = 1
 
   def self.main
