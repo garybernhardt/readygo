@@ -155,7 +155,7 @@ module Ready
 
     def run
       prime_all_definitions
-      benchmark_times, definitions = calibrate_repetitions
+      benchmark_times, definitions = run_benchmarks_once_and_calibrate_repetitions
       remaining_iterations = ITERATIONS - 1
 
       # The calibration runs serve as the first data points. Now run the rest
@@ -172,29 +172,23 @@ module Ready
       @definitions.each { |definition| Runner.new(definition).prime }
     end
 
-    def calibrate_repetitions
+    def run_benchmarks_once_and_calibrate_repetitions
       times = []
-      repetition_counts = []
+      definitions = []
       @definitions.each do |definition|
-        time, repetitions = run_and_determine_repetitions(definition)
+        time, definition = run_and_determine_repetitions(definition)
         times << time
-        repetition_counts << repetitions
+        definitions << definition
       end
 
-      [times, add_repetition_counts_to_definitions(repetition_counts)]
-    end
-
-    def add_repetition_counts_to_definitions(repetition_counts)
-      @definitions.zip(repetition_counts).map do |definition, repetitions|
-        definition.with_repetitions(repetitions)
-      end
+      [times, definitions]
     end
 
     def run_and_determine_repetitions(definition)
       repetitions = 1
       begin
         times = run_definition(definition, true)
-        [times, repetitions]
+        [times, definition]
       rescue TooSlow
         repetitions *= 2
         definition = definition.with_repetitions(repetitions)
