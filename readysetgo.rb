@@ -108,8 +108,7 @@ module Ready
     end
 
     def finish
-      @all_definitions.each do |definition|
-        benchmark = Runner.new(definition).run
+      BenchmarkCollection.new(@all_definitions).run.each do |benchmark|
         @suite = @suite.add(benchmark)
       end
 
@@ -135,36 +134,117 @@ module Ready
                                          :after_proc,
                                          :benchmark_proc,
                                          :enable_gc,
+                                         :repetitions,
                                          :nothing_proc)
 
     alias_method :enable_gc?, :enable_gc
 
-    def initialize(name, before_proc, after_proc, benchmark_proc, enable_gc)
-      super(name, before_proc, after_proc, benchmark_proc, enable_gc, lambda { })
+    def initialize(name, before_proc, after_proc, benchmark_proc, enable_gc, repetitions=1)
+      super(name, before_proc, after_proc, benchmark_proc, enable_gc, repetitions, lambda { })
+    end
+
+    def with_repetitions(repetitions)
+      BenchmarkDefinition.new(name, before_proc, after_proc, benchmark_proc, enable_gc, repetitions)
     end
   end
 
-  class Runner
-    def initialize(definition)
-      @definition = definition
+  class BenchmarkCollection
+    def initialize(definitions)
+      @definitions = definitions
     end
 
     def run
-      # Prime
+      prime_all_definitions
+      benchmark_times, definitions = run_benchmarks_once_and_calibrate_repetitions
+      remaining_iterations = ITERATIONS - 1
+
+      # The calibration runs serve as the first data points. Now run the rest
+      # of the iterations, interleaving them like (1, 2, 3, 1, 2, 3, ...)
+      # instead of running each benchmark repeatedly back to back like (1, 1,
+      # 1, 2, 2, 2). This spreads any timing jitter out across the suite rather
+      # than punishing one benchmark with it.
+      definitions = definitions * remaining_iterations
+      benchmark_times += definitions.map { |definition| run_definition(definition) }
+      assemble_benchmarks_from_times(benchmark_times)
+    end
+
+    def prime_all_definitions
+      @definitions.each { |definition| Runner.new(definition).prime }
+    end
+
+    def run_benchmarks_once_and_calibrate_repetitions
+      times = []
+      definitions = []
+      @definitions.each do |definition|
+        time, definition = run_one_benchmark_and_calibrate_repetitions(definition)
+        times << time
+        definitions << definition
+      end
+
+      [times, definitions]
+    end
+
+    def run_one_benchmark_and_calibrate_repetitions(definition)
+      repetitions = 1
+      begin
+        times = run_definition(definition, true)
+        [times, definition]
+      rescue TooSlow
+        repetitions *= 2
+        definition = definition.with_repetitions(repetitions)
+        STDERR.write "!"
+        STDERR.flush
+        retry
+      end
+    end
+
+    def assemble_benchmarks_from_times(benchmark_times)
+      by_name = benchmark_times.group_by(&:name)
+      benchmarks = by_name.map do |name, benchmark_times|
+        Benchmark.new(name, benchmark_times.map(&:time))
+      end
+      put_benchmarks_in_original_order(benchmarks)
+    end
+
+    def put_benchmarks_in_original_order(benchmarks)
+      names_in_original_order = @definitions.map(&:name)
+      benchmarks.sort_by { |benchmark| names_in_original_order.index(benchmark.name) }
+    end
+
+    def run_definition(definition, raise_if_too_slow=false)
+      STDERR.write "."
+      STDERR.flush
+      Runner.new(definition, raise_if_too_slow).run
+    end
+  end
+
+  class TooSlow < RuntimeError
+  end
+
+  class Runner
+    def initialize(definition, raise_if_too_slow=false)
+      @definition = definition
+      @raise_if_too_slow = raise_if_too_slow
+    end
+
+    def repetitions
+      @definition.repetitions
+    end
+
+    def prime
       @definition.before_proc.call
       @definition.benchmark_proc.call
       @definition.after_proc.call
+    end
 
-      STDERR.write @definition.name + " "
+    def run
+      time = if @definition.enable_gc?
+               capture_run_time
+             else
+               disable_gc { capture_run_time }
+             end
 
-      times = if @definition.enable_gc?
-                run_detecting_repetitions
-              else
-                disable_gc { run_detecting_repetitions }
-              end
-
-      STDERR.puts
-      Benchmark.new(@definition.name, times)
+      BenchmarkTime.new(@definition.name, time)
     end
 
     def disable_gc
@@ -178,37 +258,17 @@ module Ready
       GC.start
     end
 
-    def run_detecting_repetitions
-      repetitions = 1
-      begin
-        capture_run_times(repetitions)
-      rescue TooSlow
-        repetitions *= 2
-        STDERR.write "!"
-        retry
-      end
+    def capture_run_time
+      @definition.before_proc.call
+      time_in_ms = time_proc_with_overhead_nulled_out
+      @definition.after_proc.call
+
+      raise TooSlow.new if @raise_if_too_slow && time_in_ms < Ready::MINIMUM_MS
+
+      time_in_ms / repetitions
     end
 
-    def capture_run_times(repetitions)
-      (0...Ready::ITERATIONS).map do |iteration|
-        @definition.before_proc.call
-        time_in_ms = time_proc_with_overhead_nulled_out(repetitions)
-        @definition.after_proc.call
-
-        # Only check for too-slow benchmarks on the first iteration so we don't
-        # change the repetitions mid-benchmark.
-        if iteration == 0 && time_in_ms < Ready::MINIMUM_MS
-          raise TooSlow.new
-        end
-
-        STDERR.write "."
-        STDERR.flush
-
-        time_in_ms / repetitions
-      end
-    end
-
-    def time_proc_with_overhead_nulled_out(repetitions)
+    def time_proc_with_overhead_nulled_out
       # Compute the actual runtime and the constant time offset imposed by our
       # benchmarking.
       raw_time_in_ms = time_block do
@@ -225,9 +285,6 @@ module Ready
       block.call
       end_time = Time.now
       time_in_ms = (end_time - start) * 1000
-    end
-
-    class TooSlow < RuntimeError
     end
   end
 
@@ -268,6 +325,9 @@ module Ready
         [run.name, run.times.to_a]
       end]
     end
+  end
+
+  class BenchmarkTime < Struct.new(:name, :time)
   end
 
   class Benchmark
