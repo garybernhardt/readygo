@@ -49,7 +49,7 @@ module Ready
     end
 
     def show_comparison
-      comparisons = Comparison.from_suites(@old_suite, @suite)
+      comparisons = @old_suite.compare(@suite)
       comparisons.each do |comparison|
         puts
         puts comparison.name

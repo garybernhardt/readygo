@@ -36,6 +36,15 @@ module Ready
       run or raise "Couldn't find run: #{name.inspect}"
     end
 
+    def compare(other_suite)
+      names = other_suite.run_names
+      names.map do |name|
+        Comparison.new(name,
+                       self.run_named(name),
+                       other_suite.run_named(name))
+      end
+    end
+
     def save!
       File.write(".readygo", JSON.dump(to_primitives))
     end

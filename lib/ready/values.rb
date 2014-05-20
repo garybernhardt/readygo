@@ -58,15 +58,6 @@ module Ready
   end
 
   class Comparison < Struct.new(:name, :before, :after)
-    def self.from_suites(old_suite, new_suite)
-      names = new_suite.run_names
-      names.map do |name|
-        Comparison.new(name,
-                       old_suite.run_named(name),
-                       new_suite.run_named(name))
-      end
-    end
-
     def to_plot
       PlotRenderer.new(self.before, self.after).render
     end
