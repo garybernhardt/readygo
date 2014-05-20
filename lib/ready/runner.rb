@@ -81,12 +81,21 @@ module Ready
     def time_gc_time(&block)
       # Get a clean GC state
       GC.start
-      GC::Profiler.enable
 
+      # Clear the GC profiler so we get correct stats
+      GC::Profiler.enable
       GC::Profiler.clear
+
       block.call
+
+      # Trigger a GC run while the GC profiler is still on. This ensures that
+      # we count the GC cost of any uncollected garbage left around by the
+      # benchmark.
+      GC.start
+
       gc_time_in_ms = GC::Profiler.total_time
       GC::Profiler.disable
+
       p [repetitions, gc_time_in_ms]
       gc_time_in_ms
     end
