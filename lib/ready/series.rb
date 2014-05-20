@@ -34,7 +34,7 @@ module Ready
     end
 
     def stats
-      SeriesStatistics.new(min, median, max)
+      SeriesStatistics.new(min, percentile(80))
     end
 
     def stat_string

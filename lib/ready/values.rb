@@ -72,8 +72,6 @@ module Ready
     end
   end
 
-  class SeriesStatistics < Struct.new(:min,
-                                      :median,
-                                      :max)
+  class SeriesStatistics < Struct.new(:min, :percentile_80)
   end
 end

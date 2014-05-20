@@ -9,16 +9,13 @@ module Ready
 
     def render
       min = scale_value(@statistics.min)
-      median = scale_value(@statistics.median)
-      max = scale_value(@statistics.max)
+      percentile_80 = scale_value(@statistics.percentile_80)
 
       chars = (0...@bar_length).map do |i|
         case
-        when i == median
+        when i == min
           "X"
-        when i >= min && i < median
-          "-"
-        when i <= max && i > median
+        when i >= min && i < percentile_80
           "-"
         else
           " "
