@@ -25,10 +25,13 @@ module Ready
     def go(name, options={}, &block)
       full_name = @name + " " + name
       procs = BenchmarkProcs.new(@set_proc, @after_proc, block)
-      @all_definitions += [
-        BenchmarkDefinition.new(full_name + " (GC)", procs, true),
-        BenchmarkDefinition.new(full_name + " (No GC)", procs, false),
-      ]
+
+      @all_definitions << BenchmarkDefinition.new(full_name, procs, true)
+
+      if options.fetch(:disable_gc) { false }
+        no_gc_name = full_name + " (GC Disabled)"
+        @all_definitions << BenchmarkDefinition.new(no_gc_name, procs, false)
+      end
     end
 
     def finish
