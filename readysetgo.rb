@@ -1,6 +1,7 @@
 require "pp"
 require "json"
 require "optparse"
+require "forwardable"
 require_relative "lib/ready"
 
 def ready(name, &block)

@@ -24,11 +24,10 @@ module Ready
 
     def go(name, options={}, &block)
       full_name = @name + " " + name
+      procs = BenchmarkProcs.new(@set_proc, @after_proc, block)
       @all_definitions += [
-        BenchmarkDefinition.new(full_name + " (GC)",
-                                @set_proc, @after_proc, block, true),
-        BenchmarkDefinition.new(full_name + " (No GC)",
-                                @set_proc, @after_proc, block, false),
+        BenchmarkDefinition.new(full_name + " (GC)", procs, true),
+        BenchmarkDefinition.new(full_name + " (No GC)", procs, false),
       ]
     end
 
