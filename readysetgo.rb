@@ -97,9 +97,14 @@ module Ready
       @after_proc = block
     end
 
-    def go(name, &block)
+    def go(name, options={}, &block)
       full_name = @name + " " + name
-      @all_definitions << BenchmarkDefinition.new(full_name, @set_proc, @after_proc, block)
+      @all_definitions += [
+        BenchmarkDefinition.new(full_name + " (GC)",
+                                @set_proc, @after_proc, block, true),
+        BenchmarkDefinition.new(full_name + " (No GC)",
+                                @set_proc, @after_proc, block, false),
+      ]
     end
 
     def finish
@@ -129,9 +134,13 @@ module Ready
                                          :before_proc,
                                          :after_proc,
                                          :benchmark_proc,
+                                         :enable_gc,
                                          :nothing_proc)
-    def initialize(name, before_proc, after_proc, benchmark_proc)
-      super(name, before_proc, after_proc, benchmark_proc, lambda { })
+
+    alias_method :enable_gc?, :enable_gc
+
+    def initialize(name, before_proc, after_proc, benchmark_proc, enable_gc)
+      super(name, before_proc, after_proc, benchmark_proc, enable_gc, lambda { })
     end
   end
 
@@ -141,10 +150,6 @@ module Ready
     end
 
     def run
-      with_and_without_gc
-    end
-
-    def with_and_without_gc
       # Prime
       @definition.before_proc.call
       @definition.benchmark_proc.call
@@ -152,11 +157,14 @@ module Ready
 
       STDERR.write @definition.name + " "
 
-      normal = run_detecting_repetitions
-      no_gc = disable_gc { run_detecting_repetitions }
+      times = if @definition.enable_gc?
+                run_detecting_repetitions
+              else
+                disable_gc { run_detecting_repetitions }
+              end
 
       STDERR.puts
-      Benchmark.new(@definition.name, normal, no_gc)
+      Benchmark.new(@definition.name, times)
     end
 
     def disable_gc
@@ -233,8 +241,7 @@ module Ready
     def self.load
       old_results = JSON.parse(File.read(".readygo"))
       runs = old_results.each_pair.map do |name, times|
-        normal_times, no_gc_times = times
-        Benchmark.new(name, normal_times, no_gc_times)
+        Benchmark.new(name, times)
       end
       new(runs)
     end
@@ -258,18 +265,17 @@ module Ready
 
     def to_hash
       Hash[runs.map do |run|
-        [run.name, [run.normal.times, run.without_gc.times]]
+        [run.name, run.times.to_a]
       end]
     end
   end
 
   class Benchmark
-    attr_reader :name, :normal, :without_gc
+    attr_reader :name, :times
 
-    def initialize(name, normal_times, no_gc_times)
+    def initialize(name, times)
       @name = name
-      @normal = Series.new(normal_times)
-      @without_gc = Series.new(no_gc_times)
+      @times = Series.new(times)
     end
   end
 
@@ -305,20 +311,16 @@ module Ready
 
     def titles
       [
-        "Before (GC):    ",
-        "Before (No GC): ",
-        "After (GC):     ",
-        "After (No GC):  ",
-        "                ", # legend
+        "Before: ",
+        "After:  ",
+        "        ", # legend
       ]
     end
 
     def bars
       [
-        BarRenderer.new(before.normal.stats, max_value, bar_length).render,
-        BarRenderer.new(before.without_gc.stats, max_value, bar_length).render,
-        BarRenderer.new(after.normal.stats, max_value, bar_length).render,
-        BarRenderer.new(after.without_gc.stats, max_value, bar_length).render,
+        BarRenderer.new(before.times.stats, max_value, bar_length).render,
+        BarRenderer.new(after.times.stats, max_value, bar_length).render,
         legend,
       ]
     end
@@ -330,10 +332,8 @@ module Ready
 
     def max_value
       [
-        before.normal.max,
-        before.without_gc.max,
-        after.normal.max,
-        after.without_gc.max
+        before.times.max,
+        after.times.max,
       ].max
     end
 
@@ -381,6 +381,10 @@ module Ready
 
     def initialize(times)
       @times = times
+    end
+
+    def to_a
+      times
     end
 
     def median
