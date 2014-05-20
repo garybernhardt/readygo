@@ -69,6 +69,9 @@ module Ready
     end
 
     def time_runtime(&block)
+      # Get a clean GC state
+      GC.start
+
       start = Time.now
       block.call
       end_time = Time.now
