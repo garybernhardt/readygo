@@ -173,15 +173,21 @@ module Ready
     end
 
     def calibrate_repetitions
-      benchmark_times, repetitions = @definitions.map do |definition|
+      times = []
+      repetition_counts = []
+      @definitions.each do |definition|
         time, repetitions = run_and_determine_repetitions(definition)
-        [time, repetitions]
-      end.transpose
+        times << time
+        repetition_counts << repetitions
+      end
 
-      definitions = @definitions.zip(repetitions).map do |definition, repetitions|
+      [times, add_repetition_counts_to_definitions(repetition_counts)]
+    end
+
+    def add_repetition_counts_to_definitions(repetition_counts)
+      @definitions.zip(repetition_counts).map do |definition, repetitions|
         definition.with_repetitions(repetitions)
       end
-      [benchmark_times, definitions]
     end
 
     def run_and_determine_repetitions(definition)
