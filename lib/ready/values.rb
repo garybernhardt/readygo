@@ -1,8 +1,10 @@
 module Ready
   class BenchmarkDefinition < Struct.new(:name,
                                          :procs,
-                                         :enable_gc,
+                                         :type,
                                          :repetitions)
+
+    TYPES = [:runtime, :runtime_without_gc, :gc_time]
 
     extend Forwardable
     delegate :before_proc => :procs
@@ -10,14 +12,25 @@ module Ready
     delegate :benchmark_proc => :procs
     delegate :nothing_proc => :procs
 
-    alias_method :enable_gc?, :enable_gc
+    def initialize(name, procs, type, repetitions=1)
+      raise "BUG: unknown benchmark type #{type.inspect}" unless TYPES.include?(type)
+      super(name, procs, type, repetitions)
+    end
 
-    def initialize(name, procs, enable_gc, repetitions=1)
-      super(name, procs, enable_gc, repetitions)
+    def enable_gc?
+      type != :runtime_without_gc
+    end
+
+    def record_runtime?
+      [:runtime, :runtime_without_gc].include?(type)
+    end
+
+    def record_gc_time?
+      type == :gc_time
     end
 
     def with_repetitions(repetitions)
-      BenchmarkDefinition.new(name, procs, enable_gc, repetitions)
+      BenchmarkDefinition.new(name, procs, type, repetitions)
     end
   end
 
@@ -33,6 +46,9 @@ module Ready
   end
 
   class BenchmarkTime < Struct.new(:name, :time)
+    def initialize(name, time)
+      super
+    end
   end
 
   class Benchmark < Struct.new(:name, :times)

@@ -59,10 +59,30 @@ module Ready
     end
 
     def time_block(&block)
+      if @definition.record_runtime?
+        time_runtime(&block)
+      elsif @definition.record_gc_time?
+        time_gc_time(&block)
+      else
+        raise "BUG: didn't know how to record benchmark definition #{@definition}"
+      end
+    end
+
+    def time_runtime(&block)
       start = Time.now
       block.call
       end_time = Time.now
       time_in_ms = (end_time - start) * 1000
+    end
+
+    def time_gc_time(&block)
+      # Get a clean GC state
+      GC.start
+
+      GC::Profiler.clear
+      block.call
+      gc_time_in_ms = GC::Profiler.total_time
+      gc_time_in_ms
     end
 
     class TooSlow < RuntimeError
