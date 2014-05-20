@@ -13,6 +13,8 @@ module Ready
   # For comparison, on OS X Mavericks Time.now seems to have a resolution of
   # about 2 us.
   MINIMUM_MS = 1
+  RECORDING_FILE_NAME = ".readygo"
+  FILE_FORMAT_VERSION = 1
 
   def self.main
     load_files(configuration.files)

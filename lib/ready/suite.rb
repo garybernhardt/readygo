@@ -7,8 +7,12 @@ module Ready
     end
 
     def self.load
-      old_results = JSON.parse(File.read(".readygo"))
-      runs = old_results.each_pair.map do |name, times|
+      serialized = JSON.parse(File.read(".readygo"))
+      version = serialized.fetch("readygo_file_format_version")
+      unless version == Ready::FILE_FORMAT_VERSION
+        raise "Cowardly refusing to load .readygo file in old format. Please delete it!"
+      end
+      runs = serialized.fetch("runs").map do |name, times|
         Benchmark.new(name, times)
       end
       new(runs)
@@ -28,13 +32,17 @@ module Ready
     end
 
     def save!
-      File.write(".readygo", JSON.dump(to_hash))
+      File.write(".readygo", JSON.dump(to_primitives))
     end
 
-    def to_hash
-      Hash[runs.map do |run|
+    def to_primitives
+      runs = self.runs.map do |run|
         [run.name, run.times.to_a]
-      end]
+      end
+      {
+        "readygo_file_format_version" => Ready::FILE_FORMAT_VERSION,
+        "runs" => runs
+      }
     end
   end
 end
