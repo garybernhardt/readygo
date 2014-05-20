@@ -4,7 +4,7 @@ module Ready
       @name = name
       @set_proc = lambda { }
       @after_proc = lambda { }
-      @all_definitions = []
+      @definitions = []
       @configuration = configuration
       @old_suite = old_suite
       @suite = Suite.new
@@ -26,23 +26,21 @@ module Ready
       full_name = @name + " " + name
       procs = BenchmarkProcs.new(@set_proc, @after_proc, block)
 
-      @all_definitions << BenchmarkDefinition.new(full_name, procs, :runtime)
+      @definitions << BenchmarkDefinition.new(full_name, procs, :runtime)
 
       if options.fetch(:without_gc) { false }
         no_gc_name = full_name + " (GC Disabled)"
-        @all_definitions << BenchmarkDefinition.new(no_gc_name,
-                                                    procs,
-                                                    :runtime_without_gc)
+        @definitions << BenchmarkDefinition.new(no_gc_name, procs, :runtime_without_gc)
       end
 
       if options.fetch(:gc_time) { false }
         gc_time_name = full_name + " (GC Time)"
-        @all_definitions << BenchmarkDefinition.new(gc_time_name, procs, :gc_time)
+        @definitions << BenchmarkDefinition.new(gc_time_name, procs, :gc_time)
       end
     end
 
     def finish
-      BenchmarkCollection.new(@all_definitions).run.each do |benchmark|
+      BenchmarkCollection.new(@definitions).run.each do |benchmark|
         @suite = @suite.add(benchmark)
       end
 
