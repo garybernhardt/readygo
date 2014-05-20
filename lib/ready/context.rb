@@ -44,7 +44,7 @@ module Ready
         @suite = @suite.add(benchmark)
       end
 
-      @suite.save! if @configuration.record?
+      Serializer.save!(@suite) if @configuration.record?
       show_comparison if @configuration.compare?
     end
 

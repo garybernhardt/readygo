@@ -24,7 +24,7 @@ module Ready
   def self.add_context(name, &block)
     name = name.to_s
     load_files(configuration.files)
-    old_suite = Suite.load
+    old_suite = Serializer.load
     context = Context.new(name, configuration, old_suite)
     context.instance_eval(&block)
     Context.all << context
