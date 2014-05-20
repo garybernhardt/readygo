@@ -16,7 +16,7 @@ module Ready
 
     def benchmark_result_named(name)
       benchmark_result = @benchmark_results.find { |result| result.name == name }
-      benchmark_result or raise "Couldn't find benchmark_result: #{name.inspect}"
+      benchmark_result or raise BenchmarkNotFound.new(name)
     end
 
     def compare(other_suite)
@@ -26,6 +26,9 @@ module Ready
                        self.benchmark_result_named(name),
                        other_suite.benchmark_result_named(name))
       end
+    end
+
+    class BenchmarkNotFound < RuntimeError
     end
   end
 end
