@@ -51,15 +51,15 @@ module Ready
 
     def assemble_benchmarks_from_times(benchmark_times)
       by_name = benchmark_times.group_by(&:name)
-      benchmarks = by_name.map do |name, benchmark_times|
-        Benchmark.new(name, benchmark_times.map(&:time))
+      benchmark_results = by_name.map do |name, benchmark_times|
+        BenchmarkResult.new(name, benchmark_times.map(&:time))
       end
-      put_benchmarks_in_original_order(benchmarks)
+      put_benchmarks_in_original_order(benchmark_results)
     end
 
-    def put_benchmarks_in_original_order(benchmarks)
+    def put_benchmarks_in_original_order(benchmark_results)
       names_in_original_order = @definitions.map(&:name)
-      benchmarks.sort_by { |benchmark| names_in_original_order.index(benchmark.name) }
+      benchmark_results.sort_by { |result| names_in_original_order.index(result.name) }
     end
 
     def run_definition(definition, raise_if_too_slow=false)

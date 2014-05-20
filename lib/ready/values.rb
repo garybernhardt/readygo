@@ -51,7 +51,7 @@ module Ready
     end
   end
 
-  class Benchmark < Struct.new(:name, :times)
+  class BenchmarkResult < Struct.new(:name, :times)
     def initialize(name, times)
       super(name, Series.new(times))
     end

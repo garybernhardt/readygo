@@ -40,8 +40,8 @@ module Ready
     end
 
     def finish
-      BenchmarkCollection.new(@definitions).run.each do |benchmark|
-        @suite = @suite.add(benchmark)
+      BenchmarkCollection.new(@definitions).run.each do |benchmark_result|
+        @suite = @suite.add(benchmark_result)
       end
 
       Serializer.save!(@suite) if @configuration.record?

@@ -11,10 +11,10 @@ module Ready
       unless version == Ready::FILE_FORMAT_VERSION
         raise "Cowardly refusing to load .readygo file in old format. Please delete it!"
       end
-      runs = serialized.fetch("runs").map do |name, times|
-        Benchmark.new(name, times)
+      benchmark_results = serialized.fetch("benchmark_results").map do |name, times|
+        BenchmarkResult.new(name, times)
       end
-      Suite.new(runs)
+      Suite.new(benchmark_results)
     end
 
     def self.save!(suite)
@@ -22,12 +22,12 @@ module Ready
     end
 
     def self.suite_to_primitives(suite)
-      runs = suite.runs.map do |run|
-        [run.name, run.times.to_a]
+      benchmark_results = suite.benchmark_results.map do |result|
+        [result.name, result.times.to_a]
       end
       {
         "readygo_file_format_version" => Ready::FILE_FORMAT_VERSION,
-        "runs" => runs
+        "benchmark_results" => benchmark_results
       }
     end
   end

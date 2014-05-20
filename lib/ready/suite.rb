@@ -1,30 +1,30 @@
 module Ready
   class Suite
-    attr_reader :runs
+    attr_reader :benchmark_results
 
-    def initialize(runs=[])
-      @runs = runs
+    def initialize(benchmark_results=[])
+      @benchmark_results = benchmark_results
     end
 
-    def add(run)
-      Suite.new(@runs + [run])
+    def add(benchmark_result)
+      Suite.new(@benchmark_results + [benchmark_result])
     end
 
-    def run_names
-      @runs.map(&:name)
+    def benchmark_names
+      @benchmark_results.map(&:name)
     end
 
-    def run_named(name)
-      run = @runs.find { |run| run.name == name }
-      run or raise "Couldn't find run: #{name.inspect}"
+    def benchmark_result_named(name)
+      benchmark_result = @benchmark_results.find { |result| result.name == name }
+      benchmark_result or raise "Couldn't find benchmark_result: #{name.inspect}"
     end
 
     def compare(other_suite)
-      names = other_suite.run_names
+      names = other_suite.benchmark_names
       names.map do |name|
         Comparison.new(name,
-                       self.run_named(name),
-                       other_suite.run_named(name))
+                       self.benchmark_result_named(name),
+                       other_suite.benchmark_result_named(name))
       end
     end
   end
