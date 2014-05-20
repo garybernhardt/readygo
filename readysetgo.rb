@@ -176,7 +176,7 @@ module Ready
       times = []
       definitions = []
       @definitions.each do |definition|
-        time, definition = run_and_determine_repetitions(definition)
+        time, definition = run_one_benchmark_and_calibrate_repetitions(definition)
         times << time
         definitions << definition
       end
@@ -184,7 +184,7 @@ module Ready
       [times, definitions]
     end
 
-    def run_and_determine_repetitions(definition)
+    def run_one_benchmark_and_calibrate_repetitions(definition)
       repetitions = 1
       begin
         times = run_definition(definition, true)
