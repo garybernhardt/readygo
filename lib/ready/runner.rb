@@ -33,7 +33,6 @@ module Ready
       yield
     ensure
       GC.enable
-      GC.start
     end
 
     def capture_run_time
