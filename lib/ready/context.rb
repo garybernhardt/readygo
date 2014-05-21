@@ -2,7 +2,7 @@ module Ready
   class Context
     def initialize(name, configuration, old_suite)
       @name = name
-      @set_proc = lambda { }
+      @before_proc = lambda { }
       @after_proc = lambda { }
       @definitions = []
       @configuration = configuration
@@ -14,8 +14,8 @@ module Ready
       @all ||= []
     end
 
-    def set(&block)
-      @set_proc = block
+    def before(&block)
+      @before_proc = block
     end
 
     def after(&block)
@@ -24,7 +24,7 @@ module Ready
 
     def go(name, options={}, &block)
       full_name = @name + " " + name
-      procs = BenchmarkProcs.new(@set_proc, @after_proc, block)
+      procs = BenchmarkProcs.new(@before_proc, @after_proc, block)
 
       @definitions << BenchmarkDefinition.new(full_name, procs, :runtime)
 
