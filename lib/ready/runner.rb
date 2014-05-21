@@ -1,8 +1,8 @@
 module Ready
   class Runner
-    def initialize(definition, raise_if_too_slow=false)
+    def initialize(definition, enforce_minimum_runtime=false)
       @definition = definition
-      @raise_if_too_slow = raise_if_too_slow
+      @enforce_minimum_runtime = enforce_minimum_runtime
     end
 
     def repetitions
@@ -40,7 +40,8 @@ module Ready
       time_in_ms = time_proc_with_overhead_nulled_out
       @definition.after_proc.call
 
-      raise BenchmarkTooFast.new if @raise_if_too_slow && time_in_ms < Ready::MINIMUM_MS
+      too_fast = @enforce_minimum_runtime && time_in_ms < Ready::MINIMUM_MS
+      raise BenchmarkTooFast.new if too_fast
 
       time_in_ms / repetitions
     end
