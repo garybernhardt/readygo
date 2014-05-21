@@ -36,9 +36,5 @@ module Ready
     def stats
       SeriesStatistics.new(min, percentile(80))
     end
-
-    def stat_string
-      "range: %.3f - %.3f ms" % [min, max]
-    end
   end
 end
