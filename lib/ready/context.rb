@@ -1,13 +1,12 @@
 module Ready
   class Context
-    def initialize(name, configuration, old_suite)
+    attr_reader :suite
+
+    def initialize(name)
       @name = name
       @before_proc = lambda { }
       @after_proc = lambda { }
       @definitions = []
-      @configuration = configuration
-      @old_suite = old_suite
-      @suite = Suite.new
     end
 
     def self.all
@@ -39,23 +38,11 @@ module Ready
       end
     end
 
-    def finish
+    def finish(suite)
       BenchmarkCollection.new(@definitions).run.each do |benchmark_result|
-        @suite = @suite.add(benchmark_result)
+        suite = suite.add(benchmark_result)
       end
-
-      Serializer.save!(@suite) if @configuration.record?
-      show_comparison if @configuration.compare?
-    end
-
-    def show_comparison
-      comparisons = @old_suite.compare(@suite)
-      plot_width = SCREEN_WIDTH - 2
-      comparisons.each do |comparison|
-        puts
-        puts comparison.name
-        puts comparison.to_plot(plot_width).map { |s| "  " + s }.join("\n")
-      end
+      suite
     end
   end
 end

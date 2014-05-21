@@ -18,15 +18,32 @@ module Ready
   SCREEN_WIDTH = 80
 
   def self.main
+    old_suite = Serializer.load
     load_files(configuration.files)
-    Context.all.each { |context| context.finish }
+    suite = self.suite
+    Context.all.each { |context| suite = context.finish(suite) }
+    show_comparison(old_suite, suite) if configuration.compare?
+    Serializer.save!(suite) if configuration.record?
+  end
+
+  def self.suite
+    @suite ||= Suite.new
+  end
+
+  def self.show_comparison(old_suite, new_suite)
+    comparisons = old_suite.compare(new_suite)
+    plot_width = SCREEN_WIDTH - 2
+    comparisons.each do |comparison|
+      puts
+      puts comparison.name
+      puts comparison.to_plot(plot_width).map { |s| "  " + s }.join("\n")
+    end
   end
 
   def self.add_context(name, &block)
     name = name.to_s
     load_files(configuration.files)
-    old_suite = Serializer.load
-    context = Context.new(name, configuration, old_suite)
+    context = Context.new(name, configuration)
     context.instance_eval(&block)
     Context.all << context
   end
