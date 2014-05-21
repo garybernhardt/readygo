@@ -63,7 +63,7 @@ module Ready
       elsif @definition.record_gc_time?
         time_gc_time(&block)
       else
-        raise "BUG: didn't know how to record benchmark definition #{@definition}"
+        raise "BUG: don't know how to record benchmark type #{@definition.type.inspect}"
       end
     end
 
