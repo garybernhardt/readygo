@@ -1,13 +1,11 @@
 module Ready
   class PlotRenderer
-    SCREEN_WIDTH = 80
+    attr_reader :before, :after, :plot_width
 
-    attr_reader :before, :after, :screen_width
-
-    def initialize(before, after, screen_width=SCREEN_WIDTH)
+    def initialize(before, after, plot_width)
       @before = before
       @after = after
-      @screen_width = screen_width
+      @plot_width = plot_width
     end
 
     def render
@@ -43,7 +41,7 @@ module Ready
     end
 
     def bar_length
-      screen_width - titles.first.length
+      plot_width - titles.first.length
     end
   end
 end

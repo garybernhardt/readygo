@@ -50,10 +50,11 @@ module Ready
 
     def show_comparison
       comparisons = @old_suite.compare(@suite)
+      plot_width = SCREEN_WIDTH - 2
       comparisons.each do |comparison|
         puts
         puts comparison.name
-        puts comparison.to_plot.map { |s| "  " + s }.join("\n")
+        puts comparison.to_plot(plot_width).map { |s| "  " + s }.join("\n")
       end
     end
   end

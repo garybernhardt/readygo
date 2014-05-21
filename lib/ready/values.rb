@@ -58,8 +58,8 @@ module Ready
   end
 
   class Comparison < Struct.new(:name, :before, :after)
-    def to_plot
-      PlotRenderer.new(self.before, self.after).render
+    def to_plot(plot_width)
+      PlotRenderer.new(self.before, self.after, plot_width).render
     end
   end
 

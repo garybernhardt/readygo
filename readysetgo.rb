@@ -15,6 +15,7 @@ module Ready
   MINIMUM_MS = 1
   RECORDING_FILE_NAME = ".readygo"
   FILE_FORMAT_VERSION = 1
+  SCREEN_WIDTH = 80
 
   def self.main
     load_files(configuration.files)
