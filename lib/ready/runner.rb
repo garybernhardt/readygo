@@ -40,7 +40,7 @@ module Ready
       time_in_ms = time_proc_with_overhead_nulled_out
       @definition.after_proc.call
 
-      raise TooSlow.new if @raise_if_too_slow && time_in_ms < Ready::MINIMUM_MS
+      raise BenchmarkTooFast.new if @raise_if_too_slow && time_in_ms < Ready::MINIMUM_MS
 
       time_in_ms / repetitions
     end
@@ -95,11 +95,10 @@ module Ready
       gc_time_in_ms = GC::Profiler.total_time
       GC::Profiler.disable
 
-      p [repetitions, gc_time_in_ms]
       gc_time_in_ms
     end
 
-    class TooSlow < RuntimeError
+    class BenchmarkTooFast < RuntimeError
     end
   end
 end

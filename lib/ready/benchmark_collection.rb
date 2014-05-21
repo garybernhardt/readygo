@@ -40,7 +40,7 @@ module Ready
       begin
         times = run_definition(definition, true)
         [times, definition]
-      rescue Runner::TooSlow
+      rescue Runner::BenchmarkTooFast
         repetitions *= 2
         definition = definition.with_repetitions(repetitions)
         STDERR.write "!"
