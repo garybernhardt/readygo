@@ -5,7 +5,7 @@ require "forwardable"
 require_relative "lib/ready"
 
 def ready(name, &block)
-  Ready.add_context(name, &block)
+  Ready.application.add_context(name, &block)
 end
 
 module Ready
@@ -17,44 +17,56 @@ module Ready
   FILE_FORMAT_VERSION = 1
   SCREEN_WIDTH = 80
 
+  class << self
+    attr_reader :application
+  end
+
   def self.main
-    old_suite = Serializer.load
-    load_files(configuration.files)
-    suite = self.suite
-    Context.all.each { |context| suite = context.finish(suite) }
-    show_comparison(old_suite, suite) if configuration.compare?
-    Serializer.save!(suite) if configuration.record?
+    @application = Application.new
+    @application.run
   end
 
-  def self.suite
-    @suite ||= Suite.new
-  end
-
-  def self.show_comparison(old_suite, new_suite)
-    comparisons = old_suite.compare(new_suite)
-    plot_width = SCREEN_WIDTH - 2
-    comparisons.each do |comparison|
-      puts
-      puts comparison.name
-      puts comparison.to_plot(plot_width).map { |s| "  " + s }.join("\n")
+  class Application
+    def initialize
+      @contexts = []
     end
-  end
 
-  def self.add_context(name, &block)
-    name = name.to_s
-    load_files(configuration.files)
-    context = Context.new(name, configuration)
-    context.instance_eval(&block)
-    Context.all << context
-  end
+    def run
+      old_suite = Serializer.load
+      load_files(configuration.files)
+      suite = Suite.new
+      @contexts.each { |context| suite = context.run_in_suite(suite) }
 
-  def self.configuration
-    @configuration ||= Configuration.parse_options(ARGV)
-  end
+      show_comparison(old_suite, suite) if configuration.compare?
+      Serializer.save!(suite) if configuration.record?
+    end
 
-  def self.load_files(files)
-    $LOAD_PATH.unshift "."
-    files.each { |file| require file }
+    def show_comparison(old_suite, new_suite)
+      comparisons = old_suite.compare(new_suite)
+      plot_width = SCREEN_WIDTH - 2
+      comparisons.each do |comparison|
+        puts
+        puts comparison.name
+        puts comparison.to_plot(plot_width).map { |s| "  " + s }.join("\n")
+      end
+    end
+
+    def add_context(name, &block)
+      name = name.to_s
+      load_files(configuration.files)
+      context = Context.new(name)
+      context.instance_eval(&block)
+      @contexts << context
+    end
+
+    def configuration
+      @configuration ||= Configuration.parse_options(ARGV)
+    end
+
+    def load_files(files)
+      $LOAD_PATH.unshift "."
+      files.each { |file| require file }
+    end
   end
 end
 

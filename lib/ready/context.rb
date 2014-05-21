@@ -9,10 +9,6 @@ module Ready
       @definitions = []
     end
 
-    def self.all
-      @all ||= []
-    end
-
     def before(&block)
       @before_proc = block
     end
@@ -38,7 +34,7 @@ module Ready
       end
     end
 
-    def finish(suite)
+    def run_in_suite(suite)
       BenchmarkCollection.new(@definitions).run.each do |benchmark_result|
         suite = suite.add(benchmark_result)
       end
