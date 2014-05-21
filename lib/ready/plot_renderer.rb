@@ -16,9 +16,9 @@ module Ready
 
     def titles
       [
-        "Before: ",
-        "After:  ",
-        "        ", # legend
+        "Baseline: ",
+        "Current:  ",
+        "          ", # legend
       ]
     end
 
