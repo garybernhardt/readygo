@@ -1,6 +1,6 @@
 module Ready
   class Context
-    attr_reader :suite
+    attr_reader :suite, :definitions
 
     def initialize(name)
       @name = name
