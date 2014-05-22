@@ -33,12 +33,5 @@ module Ready
         @definitions << BenchmarkDefinition.new(gc_time_name, procs, :gc_time)
       end
     end
-
-    def run_in_suite(suite)
-      BenchmarkCollection.new(@definitions).run.each do |benchmark_result|
-        suite = suite.add(benchmark_result)
-      end
-      suite
-    end
   end
 end

@@ -35,7 +35,10 @@ module Ready
       old_suite = Serializer.load
       load_files(configuration.files)
       suite = Suite.new
-      @contexts.each { |context| suite = context.run_in_suite(suite) }
+      definitions = @contexts.map(&:definitions).flatten
+      BenchmarkCollection.new(definitions).run.each do |benchmark_result|
+        suite = suite.add(benchmark_result)
+      end
 
       show_comparison(old_suite, suite) if configuration.compare?
       Serializer.save!(suite) if configuration.record?
