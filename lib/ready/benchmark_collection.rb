@@ -16,6 +16,7 @@ module Ready
       # than punishing one benchmark with it.
       definitions = definitions * remaining_iterations
       benchmark_times += definitions.map { |definition| run_definition(definition) }
+      STDERR.write("\n")
       assemble_benchmarks_from_times(benchmark_times)
     end
 
