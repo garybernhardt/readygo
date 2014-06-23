@@ -23,9 +23,6 @@ module Ready
   end
 
   class Comparison < Struct.new(:name, :before, :after)
-    def to_plot(plot_width)
-      PlotRenderer.new(self.before, self.after, plot_width).render
-    end
   end
 
   class SeriesStatistics < Struct.new(:min, :percentile_80)

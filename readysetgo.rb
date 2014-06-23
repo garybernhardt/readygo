@@ -48,9 +48,10 @@ module Ready
       comparisons = old_suite.compare(new_suite)
       plot_width = SCREEN_WIDTH - 2
       comparisons.each do |comparison|
+        plot = PlotRenderer.new(comparison, plot_width).render
         puts
         puts comparison.name
-        puts comparison.to_plot(plot_width).map { |s| "  " + s }.join("\n")
+        puts plot.map { |s| "  " + s }.join("\n")
       end
     end
 

@@ -2,9 +2,9 @@ module Ready
   class PlotRenderer
     attr_reader :before, :after, :plot_width
 
-    def initialize(before, after, plot_width)
-      @before = before
-      @after = after
+    def initialize(comparison, plot_width)
+      @before = comparison.before
+      @after = comparison.after
       @plot_width = plot_width
     end
 
