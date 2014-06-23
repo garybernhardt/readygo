@@ -64,5 +64,8 @@ module Ready
   end
 
   class SeriesStatistics < Struct.new(:min, :percentile_80)
+    def max_value
+      [min, percentile_80].max
+    end
   end
 end

@@ -35,8 +35,8 @@ module Ready
 
     def max_value
       [
-        before.times.max,
-        after.times.max,
+        before.times.stats.max_value,
+        after.times.stats.max_value
       ].max
     end
 
