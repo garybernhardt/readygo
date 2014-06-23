@@ -35,8 +35,8 @@ module Ready
 
     def max_value
       [
-        before.times.stats.max_value,
-        after.times.stats.max_value
+        before.times.stats.percentile_80,
+        after.times.stats.percentile_80
       ].max
     end
 
