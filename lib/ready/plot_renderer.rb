@@ -22,8 +22,8 @@ module Ready
 
     def bars
       [
-        BarRenderer.new(before.times.stats, max_value, bar_length).render,
-        BarRenderer.new(after.times.stats, max_value, bar_length).render,
+        BarRenderer.new(before.stats, max_value, bar_length).render,
+        BarRenderer.new(after.stats, max_value, bar_length).render,
         legend,
       ]
     end
@@ -35,8 +35,8 @@ module Ready
 
     def max_value
       [
-        before.times.stats.percentile_80,
-        after.times.stats.percentile_80
+        before.stats.percentile_80,
+        after.stats.percentile_80
       ].max
     end
 

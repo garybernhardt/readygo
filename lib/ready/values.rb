@@ -51,9 +51,9 @@ module Ready
     end
   end
 
-  class BenchmarkResult < Struct.new(:name, :times)
+  class BenchmarkResult < Struct.new(:name, :times, :stats)
     def initialize(name, times)
-      super(name, Series.new(times))
+      super(name, times, SeriesStatistics.from_times(times))
     end
   end
 
@@ -64,5 +64,8 @@ module Ready
   end
 
   class SeriesStatistics < Struct.new(:min, :percentile_80)
+    def self.from_times(times)
+      new(times.min, Statistics.percentile(times, 80))
+    end
   end
 end
