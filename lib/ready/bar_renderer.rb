@@ -15,7 +15,7 @@ module Ready
         case
         when i == min
           "X"
-        when i >= min && i < percentile_80
+        when i >= min && i <= percentile_80
           "-"
         else
           " "

@@ -11,7 +11,7 @@ module Ready
     it "renders lines connecting the minimum and maximum to the median" do
       stats = SeriesStatistics.new(1.0, 3.0)
       renderer = BarRenderer.new(stats, 4.0, 10)
-      renderer.render.should == "|  X---  |"
+      renderer.render.should == "|  X---- |"
     end
 
     it "renders points at zero" do
