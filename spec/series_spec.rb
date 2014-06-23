@@ -4,10 +4,6 @@ module Ready
   describe Series do
     let(:series) { Series.new([1.0, 2.0, 100.0, 101.0, 102.0]) }
 
-    it "calculates the median" do
-      series.median.should == 100.0
-    end
-
     it "calculates the minimum" do
       series.min.should == 1.0
     end

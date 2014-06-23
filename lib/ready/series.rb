@@ -10,10 +10,6 @@ module Ready
       times
     end
 
-    def median
-      percentile(50)
-    end
-
     def min
       times.min
     end
