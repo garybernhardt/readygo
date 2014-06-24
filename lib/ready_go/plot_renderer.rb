@@ -29,8 +29,8 @@ module ReadyGo
     end
 
     def legend
-      formatted_max = "%.3g" % max_value
-      "0" + formatted_max.rjust(bar_length - 1)
+      max = TimeFormatting.format_duration(max_value)
+      "0" + max.rjust(bar_length - 1)
     end
 
     def max_value
