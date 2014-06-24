@@ -162,8 +162,7 @@ less sensitive to jitter. A transient timing event like disk IO or CPU
 contention would normally disrupt the currently-running benchmark. By
 interleaving benchmarks, the transient event's effect is spread out across the
 suite. It will often be invisible in the output because the UI shows the 80th
-percentile of samples, not the maximum runtime; the aberrant samples will be
-ignored.
+percentile of samples, not the maximum runtime.
 
 * A fresh GC run is triggered before each iteration of each benchmark. This is
 by far the largest expense for small benchmarks, tripling the runtime. It's
