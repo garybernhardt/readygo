@@ -1,7 +1,7 @@
 require "timecop"
 require "spec_helper"
 
-module Ready
+module ReadyGo
   describe Runner do
     let(:procs) { BenchmarkProcs.new(Proc.new { }, Proc.new { }, Proc.new { }) }
     let(:definition) { BenchmarkDefinition.new("a definition", procs, :runtime, 1) }

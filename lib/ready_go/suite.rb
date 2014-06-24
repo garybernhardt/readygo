@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class Suite
     attr_reader :benchmark_results
 

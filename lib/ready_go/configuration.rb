@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class Configuration < Struct.new(:record, :compare, :files)
     alias_method :record?, :record
     alias_method :compare?, :compare

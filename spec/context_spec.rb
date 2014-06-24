@@ -1,6 +1,6 @@
 require "spec_helper"
 
-module Ready
+module ReadyGo
   describe Context do
     it "creates benchmark definitions" do
       context = Context.new("a context")

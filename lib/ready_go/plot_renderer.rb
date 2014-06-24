@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class PlotRenderer
     attr_reader :before, :after, :plot_width
 

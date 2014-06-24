@@ -1,6 +1,6 @@
 require "spec_helper"
 
-module Ready
+module ReadyGo
   describe Suite do
     let(:result) { BenchmarkResult.new("a benchmark", [1.0, 2.0]) }
 

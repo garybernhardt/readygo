@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class BenchmarkDefinition < Struct.new(:name,
                                          :procs,
                                          :type,

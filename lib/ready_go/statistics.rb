@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   module Statistics
     def self.percentile(times, percentile)
       ratio = percentile * 0.01

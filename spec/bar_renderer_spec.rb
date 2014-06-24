@@ -1,6 +1,6 @@
 require "spec_helper"
 
-module Ready
+module ReadyGo
   describe BarRenderer do
     it "renders only the median when there's room for nothing else" do
       stats = SeriesStatistics.new(1.0, 1.0)

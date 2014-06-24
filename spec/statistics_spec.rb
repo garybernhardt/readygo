@@ -1,6 +1,6 @@
 require "spec_helper"
 
-module Ready
+module ReadyGo
   describe Statistics do
     let(:values) { [1.0, 2.0, 100.0, 101.0, 102.0] }
 

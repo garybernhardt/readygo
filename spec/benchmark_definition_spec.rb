@@ -1,6 +1,6 @@
 require "spec_helper"
 
-module Ready
+module ReadyGo
   describe BenchmarkDefinition do
     it "raises an exception when the benchmark type is invalid" do
       expect do

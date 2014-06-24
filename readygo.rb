@@ -1,10 +1,10 @@
-require_relative "lib/ready"
+require_relative "lib/ready_go"
 
 def ready(name, &block)
-  Ready.application.add_context(name, &block)
+  ReadyGo.application.add_context(name, &block)
 end
 
-module Ready
+module ReadyGo
   class << self
     attr_reader :application
   end
@@ -63,5 +63,5 @@ module Ready
 end
 
 if $0 == __FILE__
-  Ready.main
+  ReadyGo.main
 end

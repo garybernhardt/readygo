@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class Context
     attr_reader :suite, :definitions
 

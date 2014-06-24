@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class BenchmarkCollection
     def initialize(definitions)
       @definitions = definitions

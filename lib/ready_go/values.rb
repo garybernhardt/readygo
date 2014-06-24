@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   # The `nothing` attribute exists to provide a way to measure baseline
   # performance to null out benchmarking overhead.
   class BenchmarkProcs < Struct.new(:before_proc,

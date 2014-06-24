@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class Serializer
     def self.load
       begin
@@ -8,7 +8,7 @@ module Ready
       end
 
       version = serialized.fetch("readygo_file_format_version")
-      unless version == Ready::FILE_FORMAT_VERSION
+      unless version == ReadyGo::FILE_FORMAT_VERSION
         raise "Cowardly refusing to load .readygo file in old format. Please delete it!"
       end
       benchmark_results = serialized.fetch("benchmark_results").map do |name, times|
@@ -26,7 +26,7 @@ module Ready
         [result.name, result.times.to_a]
       end
       {
-        "readygo_file_format_version" => Ready::FILE_FORMAT_VERSION,
+        "readygo_file_format_version" => ReadyGo::FILE_FORMAT_VERSION,
         "benchmark_results" => benchmark_results
       }
     end

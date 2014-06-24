@@ -1,4 +1,4 @@
-module Ready
+module ReadyGo
   class BarRenderer
     def initialize(series_statistics, max_value, bar_length)
       @statistics = series_statistics
