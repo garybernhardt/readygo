@@ -13,6 +13,7 @@ require_relative "ready_go/bar_renderer"
 require_relative "ready_go/serializer"
 require_relative "ready_go/statistics"
 require_relative "ready_go/benchmark_definition"
+require_relative "ready_go/time_formatting"
 
 module ReadyGo
   ITERATIONS = 16
