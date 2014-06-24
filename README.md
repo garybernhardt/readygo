@@ -87,7 +87,7 @@ big files being read
 The line of dots and bangs is a progress indicator to let you know that it's
 still alive. Dots represent benchmarks being run; bangs represent benchmarks
 that were too fast and were wrapped in loops automatically to increase their
-runtime (see "Theory of Operation" for more on that). Times are expressed in
+runtime (see "Timing Methodology" for more on that). Times are expressed in
 seconds (s), milliseconds (ms), microseconds (us), or nanoseconds (ns) as
 appropriate.
 
