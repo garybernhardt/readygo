@@ -1,7 +1,3 @@
-require "pp"
-require "json"
-require "optparse"
-require "forwardable"
 require_relative "lib/ready"
 
 def ready(name, &block)
@@ -9,14 +5,6 @@ def ready(name, &block)
 end
 
 module Ready
-  ITERATIONS = 16
-  # For comparison, on OS X Mavericks Time.now seems to have a resolution of
-  # about 2 us.
-  MINIMUM_MS = 1
-  RECORDING_FILE_NAME = ".readygo"
-  FILE_FORMAT_VERSION = 1
-  SCREEN_WIDTH = 80
-
   class << self
     attr_reader :application
   end

@@ -1,1 +1,1 @@
-require_relative "../readysetgo"
+require_relative "../lib/ready"
