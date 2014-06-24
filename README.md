@@ -7,7 +7,7 @@ measurements.)
 Readygo is a benchmarking tool that's unique in several ways:
 
 * It goes to great lengths to produce accurate numbers by nulling out sources
-of timing offsets and jitter. (See "Timing Methodology" below.)
+of timing offsets and jitter. (See ["Timing Methodology"](#timing-methodology) below.)
 
 * It can reliably measure aggregate GC costs to sub-nanosecond accuracy (that's
 less than one CPU cycle per benchmark run).
@@ -30,9 +30,9 @@ garbage (and hence time cost) from the first code? How do you know that your
 benchmark was long enough to get accurate timing from the system clock? How
 much constant and variable overhead does your benchmarking harness itself add,
 and can that overhead mask results? Etc., etc. Readygo compensates for all of
-these problems (see "Timing Methodology" below) and it can reliably measure
-even sub-nanosecond aggregate performance costs (see "Sub-Nanosecond Timing
-Example" below).
+these problems (see ["Timing Methodology"](#timing-methodology) below) and it
+can reliably measure even sub-nanosecond aggregate performance costs (see 
+["Sub-Nanosecond Timing Example"](#sub-nanosecond-timing-example) below).
 
 ## Basic Usage
 
@@ -87,9 +87,9 @@ big files being read
 The line of dots and bangs is a progress indicator to let you know that it's
 still alive. Dots represent benchmarks being run; bangs represent benchmarks
 that were too fast and were wrapped in loops automatically to increase their
-runtime (see "Timing Methodology" for more on that). Times are expressed in
-seconds (s), milliseconds (ms), microseconds (us), or nanoseconds (ns) as
-appropriate.
+runtime (see ["Timing Methodology"](#timing-methodology) for more on that).
+Times are expressed in seconds (s), milliseconds (ms), microseconds (us), or
+nanoseconds (ns) as appropriate.
 
 The plot shows a rough visual indication of performance differences between the
 last recording ("Baseline") and the current system ("Current"). It provides the
