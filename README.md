@@ -150,7 +150,7 @@ There may still be GC runs during the benchmark, but they will be fairly determi
 * If a benchmark takes less than 1 ms, it's re-run in a loop that runs it twice.
 If that takes less than 1 ms, the loop is doubled to four times, and this is repeated until the loop takes at least 1 ms.
 This ensures that the timing stays well above the resolution of the system's clock.
-On OS X, that resolution is about 2 us, so the 1 ms minimum is 5,000 times the clock's resolution, ensuring that we get meaningful time measurements.
+On OS X, that resolution is about 2 us, so the 1 ms minimum is 500 times the clock's resolution, ensuring that we get meaningful time measurements.
 
 * Readygo's own benchmarking overhead is nulled out.
 After each benchmark block is run, the full benchmarking process is repeated, but with an empty block.
