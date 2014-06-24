@@ -79,9 +79,9 @@ against the current code, and compare. It will look something like this:
 ```
 .!.!.!.!.!.!.!.!................
 big files being read
-  Before: |                         X--------------                            |
-  After:  |                                                X-------------------|
-          0 ms                                                           8.56 ms
+  Baseline: |                       X--------------                            |
+  Current:  |                                              X-------------------|
+            0                                                            8.56 ms
 ```
 
 The line of dots and bangs is a progress indicator to let you know that it's
@@ -92,7 +92,7 @@ seconds (s), milliseconds (ms), microseconds (us), or nanoseconds (ns) as
 appropriate.
 
 The plot shows a rough visual indication of performance differences between the
-last recording ("Before") and the current system ("After"). It provides the
+last recording ("Baseline") and the current system ("Current"). It provides the
 best estimate of actual runtime cost (the X, which is the lowest sampled
 runtime), as well as a visual indication of the variance (the bar to the right
 of the X, which extends until the 80th percentile of runtime).
@@ -129,19 +129,19 @@ and the time spent in the GC:
 
 ```
 reading files that are big
-  Before: |                           X------------------------------------------|
-  After:  |                                         X----------------------      |
-          0                                                                8.56 ms
+  Baseline: |                       X------------------------------------------|
+  Current:  |                                     X----------------------      |
+            0                                                            8.56 ms
 
 reading files that are big (GC Disabled)
-  Before: |                                              X-----------------------|
-  After:  |                                              X---------------------- |
-          0                                                                8.12 ms
+  Baseline: |                                          X-----------------------|
+  Current:  |                                          X---------------------- |
+            0                                                            8.12 ms
 
 reading files that are big (GC Time)
-  Before: |                                                      X---------------|
-  After:  |                                                     X-----------     |
-          0                                                                  19 us
+  Baseline: |                                                  X---------------|
+  Current:  |                                                 X-----------     |
+            0                                                              19 us
 ```
 
 ## Timing Methodology
@@ -207,9 +207,9 @@ timing output is:
 
 ```
 an array of a single integer (GC Time)
-  Before: |                                                  X-------------------|
-  After:  |                                                 X-------------       |
-          0                                                                .024 ns
+  Baseline: |                                              X-------------------|
+  Current:  |                                             X-------------       |
+            0                                                            .024 ns
 ```
 
 The block takes about 0.02 nanoseconds of GC time per iteration, which is far
