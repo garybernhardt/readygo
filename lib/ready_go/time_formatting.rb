@@ -1,6 +1,8 @@
 module ReadyGo
   module TimeFormatting
-    def self.format_duration(duration)
+    def self.format_duration(duration_in_ms)
+      duration = duration_in_ms / 10.0 ** 3
+
       if duration < 10.0 ** -6
         duration *= 10 ** 9
         units = "ns"
