@@ -109,17 +109,17 @@ These options can be used together.
 With both GC options enabled, the output will contain the standard benchmark of runtime, the runtime with GC disabled, and the time spent in the GC:
 
 ```
-reading files that are big
+big files being read
   Baseline: |                       X------------------------------------------|
   Current:  |                                     X----------------------      |
             0                                                            8.56 ms
 
-reading files that are big (GC Disabled)
+big files being read (GC Disabled)
   Baseline: |                                          X-----------------------|
   Current:  |                                          X---------------------- |
             0                                                            8.12 ms
 
-reading files that are big (GC Time)
+big files being read (GC Time)
   Baseline: |                                                  X---------------|
   Current:  |                                                 X-----------     |
             0                                                              19 us
