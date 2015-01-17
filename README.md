@@ -158,7 +158,7 @@ It's not perfect (for example, there may be minor GC effects that can't be nulle
 
 ## Sub-Nanosecond Timing Example
 
-Readygo's measurement strategy results in very accurate readings.
+Readygo's measurement strategy results in readings that are both very accurate and very precise.
 Consider this benchmark of a single-element array being created:
 
 ```ruby
