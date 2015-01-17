@@ -51,14 +51,14 @@ There can be many `go` blocks, each of which will be reported individually.
 To record the system's current performance as a baseline, run:
 
 ```
-readygo record mybenchmark.rb
+readygo --record mybenchmark.rb
 ```
 
 The recorded timings are written to a JSON file called `.readygo` and will serve as a baseline for subsequent runs.
 To make a benchmark comparison against other branches, changes that you make, etc., run:
 
 ```
-readygo compare mybenchmark.rb
+readygo --compare mybenchmark.rb
 ```
 
 This will load the recorded baseline benchmark numbers, re-run the benchmarks against the current code, and compare.
@@ -85,7 +85,7 @@ It provides the best estimate of actual runtime cost (the X, which is the lowest
 This is true for any benchmarking tool.
 
 * Implementing multiple variations of a piece of code is rarely necessary.
-Instead, `readygo record` the current benchmark performance, make your changes to the code (or switch branches), then `readygo compare` to see how your changes affected the benchmarks.
+Instead, `readygo --record` the current benchmark performance, make your changes to the code (or switch branches), then `readygo --compare` to see how your changes affected the benchmarks.
 
 * Move as much as possible into `before` and `after` blocks.
 Generally, the `go` block should be a single method call.
