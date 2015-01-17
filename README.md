@@ -89,7 +89,7 @@ Instead, `readygo --record` the current benchmark performance, make your changes
 
 * Move as much as possible into `before` and `after` blocks.
 Generally, the `go` block should be a single method call.
-This ensure that you're benchmarking only one thing.
+This ensures that you're benchmarking only one thing.
 
 ## Garbage Collector Benchmarks
 
