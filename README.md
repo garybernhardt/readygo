@@ -1,8 +1,5 @@
 # Readygo
 
-*This isn't ready yet! It's here so that its accuracy can be scrutinized.*
-(This warning will go away when I have enough confidence in Readygo's measurements.)
-
 Readygo is a benchmarking tool that's unique in several ways:
 
 * It goes to great lengths to produce accurate numbers by nulling out sources of timing offsets and jitter.
