@@ -182,7 +182,7 @@ an array of a single integer (GC Time)
 The block takes about 0.02 nanoseconds of GC time per iteration, which is far less than a single CPU clock cycle (it's about six light-millimeters of time, less than the amount of time that it takes an electron to cross an Intel i7 CPU's die).
 While running this benchmark, Readygo scaled up to running the block in a loop 524,288 times, which was enough to trigger a GC run costing about .026 ms.
 The benchmarking overhead's GC cost of .014 ms was subtracted from that, for a net measured time of about .012 ms.
-Dividing .012 ms by the 524,288 iterations gives a GC time of roughly .02 ns per block call, which what you see reported.
+Dividing .012 ms by the 524,288 iterations gives a GC time of roughly .02 ns per block call, which is what you see reported.
 In aggregate, each `[1]` array constructed eventually costs around .02 ns in garbage collection time.
 
 Readygo can reliably benchmark on sub-nanosecond timescales.
