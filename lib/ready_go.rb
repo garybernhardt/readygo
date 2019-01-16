@@ -26,11 +26,12 @@ module ReadyGo
   SCREEN_WIDTH = 80
 
   class << self
-    attr_reader :application
+    def application
+      @application ||= Application.new
+    end
   end
 
   def self.main
-    @application = Application.new
-    @application.run
+    application.run
   end
 end
