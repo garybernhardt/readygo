@@ -2,6 +2,7 @@ require "json"
 require "optparse"
 require "forwardable"
 
+require_relative "ready_go/application"
 require_relative "ready_go/configuration"
 require_relative "ready_go/context"
 require_relative "ready_go/values"
@@ -23,4 +24,13 @@ module ReadyGo
   RECORDING_FILE_NAME = ".readygo"
   FILE_FORMAT_VERSION = 1
   SCREEN_WIDTH = 80
+
+  class << self
+    attr_reader :application
+  end
+
+  def self.main
+    @application = Application.new
+    @application.run
+  end
 end
