@@ -1,4 +1,7 @@
-require_relative "lib/ready_go"
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "ready_go"
 
 def ready(name, &block)
   ReadyGo.application.add_context(name, &block)

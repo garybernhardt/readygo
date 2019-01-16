@@ -1,1 +1,2 @@
-require_relative "../lib/ready_go"
+require "bundler/setup"
+require "ready_go"
